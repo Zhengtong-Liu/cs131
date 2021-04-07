@@ -9,12 +9,12 @@ let my_subset_test5 = not (subset [1; 3] [1])
 let my_subset_test6 = subset [] [[]]
 let my_subset_test7 = subset [[1]; [2]] [[1]; [2]; [3]]
 
-let my_equal_set_test0 = equal_sets [] []
-let my_equal_set_test1 = equal_sets [1; 3; 1] [3; 1]
-let my_equal_set_test2 = equal_sets [3; 1] [1; 3; 1]
-let my_equal_set_test3 = not (equal_sets [3; 1; 5] [3; 1; 6])
-let my_equal_set_test4 = not (equal_sets [3; 1; 6] [1])
-let my_equal_set_test5 = not (equal_sets [[]] [[1]])
+let my_equal_sets_test0 = equal_sets [] []
+let my_equal_sets_test1 = equal_sets [1; 3; 1] [3; 1]
+let my_equal_sets_test2 = equal_sets [3; 1] [1; 3; 1]
+let my_equal_sets_test3 = not (equal_sets [3; 1; 5] [3; 1; 6])
+let my_equal_sets_test4 = not (equal_sets [3; 1; 6] [1])
+let my_equal_sets_test5 = not (equal_sets [[]] [[1]])
 
 let my_set_all_union_test0 = equal_sets (set_all_union []) []
 let my_set_all_union_test1 = equal_sets (set_all_union [[1; 3]; [3; 4]]) [1; 3; 4]

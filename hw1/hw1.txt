@@ -1,0 +1,61 @@
+
+First of all, the discussion was very helpful in
+helping me to learn the basics of Ocaml. 
+
+With the basic knowledge of Ocaml, I first made some
+attempts in the Ocaml REPL interactive terminal. I solved
+the first 4 questions quickly, with reference to the List
+Module. Here are the reflections on each of them:
+
+(1) For the first question, I wanted to traverse the first
+list a and see whether each element of a is a member of the
+second list b. To implement this, I use the recursion, and
+test whether the head of the first list (if not empty) is a 
+member of the second list. 
+
+(2) For the second question, note that equal sets means a is 
+a subset of b and b is a subset of a, so I called the first 
+function twice to implement this function. 
+
+(3) For the third question, it would be easy if I do not need 
+to consider the repetition of elements. To make the repetition 
+of elements in consideration, I check whether the head of the 
+first list (if not empty) is a member of the second list. If
+so, I go to the next element in the first list. If not, I put
+the head of the first list into the second list, and go to the
+next element of the first list. When the first list is empty, I
+return the second list. Note that this implementation also 
+involves the use of recursion. 
+
+(4) For the fourth question, I used the idea of recursion again.
+Notice that the set_all_union is essentially the head set
+(if the list is not empty) concatenated with the remaining sets.
+
+For 5 and 6, I thought for a while before solving them. 
+
+(5) At first glance, I thought that the self_member function can be 
+implemented. However, after trials, I noticed that in implementation, 
+it would actually be List.mem s s, where s is the parameter. However, 
+this would be an error in Ocaml, as it would do type inference, and if
+the first s is of type 'a, the second s should be of type 'a list,
+and 'a is incompatible with tpye 'a list, which leads to an error.
+
+(6) This question was a bit hard to understand, but reading the sample 
+tests helped me understand the question and solve it quickly. Essentially,
+it would be a recursion, and test whether (eq) x (f x) is true each time.
+
+The last question was far more difficult for me comparing to the first 6 
+questions. To approach this question, I refer to the TA codeHelp github
+provided on Piazza. Despite the helpful hint, I still met two difficulties 
+when solving this question. The first was when I wanted to check the type 
+of a symbol. Ocaml has no built-in type checking functions, and after 
+research and trials, I learnt that the type checking can be done through
+pattern matching of each element in the list. The second obstacle was that 
+the computed_fixed_point did not fir into the scenario well. I wanted to 
+find a fixed point of y in the tuple (x, y), with x unchanged each time.
+To solve this problem, I rewrote the computed_fixed_point function and mangaged
+to meet this requirement.
+
+I notice that my implementation of question 7 was still was complicated. If 
+I have more time, I would like to simplify my implementation.
+
