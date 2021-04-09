@@ -1,5 +1,3 @@
-
-
 let my_subset_test0 = subset [] []
 let my_subset_test1 = subset [] [1; 3]
 let my_subset_test2 = subset [1; 1] [1; 3]

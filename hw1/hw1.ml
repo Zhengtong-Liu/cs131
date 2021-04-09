@@ -24,7 +24,7 @@ let rec set_all_union a = match a with
 (* Q5: 'self_member s' cannot be implemented in Ocaml, as Ocaml do type inference, 
 and if we test if s is a member of s in Ocaml (like List.mem s s), the compiler 
 will complain that as s is of type 'a, and the second s should be 'a list 
-rather than 'a. This leads to an error, which means self_member cannot be implemented. *)
+rather than 'a. This leads to an type error, which means self_member cannot be implemented. *)
 
 (* Q6: compute fixed point, compute the fixed point of a function *)
 let rec computed_fixed_point eq f x = 
