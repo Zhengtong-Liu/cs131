@@ -125,6 +125,7 @@ let make_parser gram =
     let derivation = 
       parse_nonterm (snd gram) (fst gram) parse_accept_empty_suffix [] frag in
     match derivation with
-    | Some path when (List.length path) > 0 -> Some (snd (construct_tree (List.rev path)))
+    | Some path when (List.length path) > 0 -> 
+        Some (snd (construct_tree (List.rev path)))
     | _ -> None in
   make_parser_helper gram ;;
