@@ -1,0 +1,46 @@
+I decided to write make_parser in terms of make_matcher. Note that the derivation
+of a fragment can be found using the function make_matcher, and make_parser would
+be easier to write with the derivation given. To return the derivation, I need to
+modify the make_matcher function. Specifically, I modified the two helper functions
+of the make_matcher: match_term and match_nonterm. Firstly, I changed the type of 
+the acceptor to receive a derivation and fragment. Then the match_term function was
+changed to parse_term, where the derviation (up to that point) and the remaining
+fragment is passed to the acceptor if the terminal given matches with the head of
+the given fragment. I also modified the match_nonterm to parse_nonterm in the 
+following way:
+(1) add an accumulator as a parameter to the helper functions inside parse_nonterm,
+ so that the derivation can be passed between those functions;
+(2) when trying a specific rule, concat the (nonterminal, right_hand_side rule) tuple
+with the current accumulator. Note that if this rule should be included in the 
+derivation, the parse_rule function would return it as Some tree; otherwise, it would
+be none and we discard the accumulator (with the false rule inserted) and try the next
+rule in the rules_list. In this way, we would finally find the correct rules that should
+be included in the derviation. 
+After this step, we have the derivation matched with a fragment. Then we can build a tree
+out of this derivation. To implement this function, I wrote two recursive functions
+which calls each other, namely, construct_tree and rhs_to_children, where construct tree
+use the current derivation to build a tree and rhs_to_children would return the children node
+of a Node. Here are the basic logic of the two functions:
+construct_tree: if the derivation given is empty, it is invalid, as empty derivation would be
+checked ahead, and should not happen in this situation; then we match the derivation with the
+pattern head::tail, where fst of head is the nonterminal symbol, and snd of head is the
+rule from this symbol, which would be passed to rhs_to_children to construct the children. Also,
+the remaining derivation would be kept as a return value of the construct_tree so that it can
+be used construct the remaining siblings trees. 
+rhs_to_children: use the current rule and the remaining derivation to construct the children. 
+If the head of the current rule is a nonterminal, construct_tree would be called first to construct
+the subtree where the nonterminal symbol served as the root, and then pass the remaining derivations
+to construct the silbings trees. If the heaf is a terminal, we only need to add a leaf in the children
+and pass the remianing derviation to complete the children list.
+
+Here are some weaknesses in my solutions for make_matcher and make_parser. One type of grammar that my
+make_matcher and make_parser cannot hold is the left recursive ones. For instance, considering the
+nonterminal symbol Expr with the right_hand_side rule [N Expr; N Binop; N Expr], and the head of the 
+fragment fed into the matcher is some terminal. Then when the matcher tries to match this rule with
+the fragment, it would expand the rule to [N Expr; N Binop; N Expr; N Binop; N Expr] (assume the rule 
+[N Expr; N Binop; N Expr] is the first in the rules list). Then since the current rule still needs to be
+expanded as the head is a nonterminal, the rule now becomes [N Expr; N Binop; N Expr; 
+N Expr; N Binop; N Expr; N Binop; N Expr] and this process would not terminate. Hence, the matcher is
+stuck in the infinite recursion and cannot work properly. In fact, when testing my matcher on a 
+left recurisive grammar, the ocmal reported the error that there is 
+"Stack overflow during evaluation (looping recursion?)."
