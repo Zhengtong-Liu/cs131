@@ -78,3 +78,36 @@ let filter_reachable grammar =
       let filtered_rules = List.filter (fun a -> (List.mem (fst a) 
       reachable_symbols)) rules in
       (start_symbol, filtered_rules);;
+
+    
+
+      
+      
+
+      
+let gsyms gram = 
+  let rec helper rules accumulator =
+  match rules with
+  | [] -> accumulator
+  | head::tail -> 
+  let rec collect_nt_rhs rhs accumulator =
+    match rhs with
+    | [] -> accumulator
+    | hd::tl -> match hd with
+        | N nt -> if List.mem nt accumulator then 
+          (collect_nt_rhs tl accumulator) else (collect_nt_rhs tl (nt::accumulator))
+        | T _ -> (collect_nt_rhs tl accumulator) in
+      let new_accumulator = collect_nt_rhs (snd head) accumulator in
+  helper tail new_accumulator
+in helper (snd gram) []
+      
+
+let grecsyms gram = 
+  let rec collect_rec_nts rules nts accumulator = 
+    match nts with
+    | [] -> accumulator
+    | head::tail -> 
+      match List.mem head (gsyms (filter_reachable (head, rules))) with
+      | true ->  collect_rec_nts rules tail (head::accumulator) 
+      | false ->  collect_rec_nts rules tail accumulator in
+  collect_rec_nts (snd gram) (gsyms gram) []

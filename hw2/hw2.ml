@@ -129,3 +129,44 @@ let make_parser gram =
         Some (snd (construct_tree (List.rev path)))
     | _ -> None in
   make_parser_helper gram ;;
+
+
+
+let rec merge_sorted op a b = match a with
+    | [] -> b
+    | h::t -> match b with
+      | [] -> a
+      | hd::tl -> if (op h hd) then h::(merge_sorted op t b)
+      else hd::(merge_sorted op a tl);;
+
+  
+
+let rec adjdup l = match l with
+| [] -> []
+| hd::_ -> let same_as_hd = (List.filter (fun a -> a == hd) l) in
+            let remain_tl = (List.filter (fun a -> a <> hd) l) in
+            same_as_hd @ adjdup remain_tl;;
+
+let test_l = [7; 6; 7; 8; 8; 4; 10; 4; 3; 5; 1; 2; 7; 7; 10; 9; 8; 5];;
+
+adjdup test_l;;
+
+
+let rec nonterm_rhs rhs acc =
+  match rhs with
+  | [] -> acc
+  | hd::tl -> match hd with
+    | N nonterm -> if List.mem nonterm acc then 
+      (nonterm_rhs tl acc) else (nonterm_rhs tl (nonterm::acc))
+    | T term -> (nonterm_rhs tl acc)
+
+
+let rec gsyms_helper gram acc =
+  match gram with
+  | [] -> acc
+  | hd::tl -> let new_acc = nonterm_rhs (snd hd) acc in
+  if List.mem (fst hd) new_acc then 
+    (gsyms_helper tl new_acc) else
+    (gsyms_helper tl ((fst hd)::new_acc))
+
+let gsyms gram = gsyms_helper gram []
