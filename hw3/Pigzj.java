@@ -137,10 +137,10 @@ class SingleThreadedGZipCompressor
                             int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.NO_FLUSH);
                             outStreamMap.put(counter, 
                                             new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
-                            // if (deflatedBytes > 0) 
-                            // {
-                            //     outStream.write(cmpBlockBuf, 0, deflatedBytes);
-                            // }
+                            if (deflatedBytes > 0) 
+                            {
+                                outStream.write(cmpBlockBuf, 0, deflatedBytes);
+                            }
                         }
                         counter++;
                     }
