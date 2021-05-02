@@ -94,7 +94,7 @@ class SingleThreadedGZipCompressor
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
         long fileBytes = System.in.available();
-        System.out.println(fileBytes);
+        // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
         InputStream inStream = System.in;
 
@@ -282,7 +282,7 @@ public class Pigzj
         }
         else nThreads = (int) Integer.parseInt(args[1]);
 
-        System.out.println(nThreads);
+        // System.out.println(nThreads);
 
         // var counter = new AtomicInteger(0);
         // Thread threads [] = new Thread [nThreads];
