@@ -83,7 +83,7 @@ class SingleThreadedGZipCompressor
         buf[offset + 1] = (byte)((s >> 8) & 0xff);
     }
 
-    public void compress() throws FileNotFoundException, IOException, OutOfMemoryError 
+    public void compress() throws FileNotFoundException, IOException
     {
 
         this.writeHeader();
@@ -103,6 +103,11 @@ class SingleThreadedGZipCompressor
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
         InputStream inStream = System.in;
+        if (inStream == null)
+        {
+            System.err.println("no input from stdin");
+            System.exit(1);
+        }
         PushbackInputStream push = new PushbackInputStream(inStream);
 
         long totalBytesRead = 0;
@@ -274,11 +279,6 @@ public class Pigzj
             cmp.compress(); 
         }
         catch (IOException e)
-        {
-            System.out.println(e.getCause());
-            System.exit(1);
-        }
-        catch (OutOfMemoryError e)
         {
             System.out.println(e.getCause());
             System.exit(1);
