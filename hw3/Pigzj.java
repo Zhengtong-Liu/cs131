@@ -275,12 +275,12 @@ public class Pigzj
         }
         catch (IOException e)
         {
-            System.out.println(e.getMessage());
+            System.out.println(e.getCause());
             System.exit(1);
         }
         catch (OutOfMemoryError e)
         {
-            System.out.println(e.getMessage());
+            System.out.println(e.getCause());
             System.exit(1);
         }
     }
