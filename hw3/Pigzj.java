@@ -83,7 +83,7 @@ class SingleThreadedGZipCompressor
         buf[offset + 1] = (byte)((s >> 8) & 0xff);
     }
 
-    public void compress() throws FileNotFoundException, IOException 
+    public void compress() throws FileNotFoundException, IOException, OutOfMemoryError 
     {
 
         this.writeHeader();
@@ -112,7 +112,14 @@ class SingleThreadedGZipCompressor
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        int nBytes = -1;
+        try {
+           nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        } catch (IOException e)
+        {
+            System.err.println("read error: " + e.getMessage());
+            System.exit(1);
+        }
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
         while (nBytes > 0) 
@@ -124,7 +131,13 @@ class SingleThreadedGZipCompressor
             SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag);
             executor.execute(worker);
 
-            nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+            try {
+                nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+             } catch (IOException e)
+             {
+                 System.err.println("read error: " + e.getMessage());
+                 System.exit(1);
+             }
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
         }
@@ -151,7 +164,12 @@ class SingleThreadedGZipCompressor
         writeTrailer(fileBytes, trailerBuf, 0);
         outStream.write(trailerBuf);
 
-        outStream.writeTo(System.out);
+        try {
+            outStream.writeTo(System.out);
+        } catch (IOException e) {
+            System.err.println("write error: " + e.getMessage());
+            System.exit(1);
+        }
     }
 }
 
@@ -269,6 +287,13 @@ public class Pigzj
         // }
 
         SingleThreadedGZipCompressor cmp = new SingleThreadedGZipCompressor(nThreads);
-        cmp.compress();
+        try {
+            cmp.compress(); 
+        }
+        catch (OutOfMemoryError e)
+        {
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
     }
 }
