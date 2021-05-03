@@ -104,22 +104,10 @@ class SingleThreadedGZipCompressor
         // InputStream inStream = new FileInputStream(file);
         InputStream inStream = System.in;
         PushbackInputStream push = new PushbackInputStream(inStream);
-        // if (push.available() <= 0)
-        // {
-        //     System.err.println("no input from stdin");
-        //     System.exit(1);
-        // }
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = -1;
-        try {
-           nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
-        } catch (IOException e)
-        {
-            System.err.println("read error: " + e.getMessage());
-            System.exit(1);
-        }
+        int nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
         while (nBytes > 0) 
@@ -131,13 +119,8 @@ class SingleThreadedGZipCompressor
             SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag);
             executor.execute(worker);
 
-            try {
-                nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
-             } catch (IOException e)
-             {
-                 System.err.println("read error: " + e.getMessage());
-                 System.exit(1);
-             }
+            nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+  
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
         }
@@ -289,6 +272,11 @@ public class Pigzj
         SingleThreadedGZipCompressor cmp = new SingleThreadedGZipCompressor(nThreads);
         try {
             cmp.compress(); 
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+            System.exit(1);
         }
         catch (OutOfMemoryError e)
         {
