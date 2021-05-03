@@ -1,10 +1,22 @@
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.*;
 
 
 import java.io.*;
 import java.nio.file.*;
 
+
+class SharedVariables 
+{
+    public final static int BLOCK_SIZE = 131072; // 128 KB
+    public final static int DICT_SIZE = 32768; // 32 KB
+    public static ConcurrentHashMap<Integer, byte[]> outStreamMap = new ConcurrentHashMap<Integer, byte[]>();
+    public static ConcurrentHashMap<Integer, Integer> bytesMap = new ConcurrentHashMap<Integer, Integer>();
+    public static ConcurrentHashMap<Integer, byte[]> primingMap = new ConcurrentHashMap<Integer, byte[]>();
+
+}
 
 class SingleThreadedGZipCompressor 
 {
@@ -81,15 +93,11 @@ class SingleThreadedGZipCompressor
 
         /* Buffers for input blocks, compressed bocks, and dictionaries */
         byte[] blockBuf = new byte[BLOCK_SIZE];
-        byte[] cmpBlockBuf = new byte[BLOCK_SIZE * 2];
-        byte[] dictBuf = new byte[DICT_SIZE];
-        Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+        // byte[] cmpBlockBuf = new byte[BLOCK_SIZE * 2];
+        // byte[] dictBuf = new byte[DICT_SIZE];
+        // Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 
-        ConcurrentHashMap<Integer, Tuple<Integer, byte[]>> outStreamMap = 
-        new ConcurrentHashMap<Integer, Tuple<Integer, byte[]>>();
-
-        Thread[] threads = new Thread [nThreads];
-        int counter = 0;
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
@@ -97,111 +105,42 @@ class SingleThreadedGZipCompressor
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
         InputStream inStream = System.in;
+        PushbackInputStream push = new PushbackInputStream(inStream);
 
         long totalBytesRead = 0;
-        boolean hasDict = false;
-        int nBytes = inStream.read(blockBuf);
-        totalBytesRead += nBytes;
+        // boolean hasDict = false;
+        int nBytes = push.read(blockBuf, 0, BLOCK_SIZE);
+        int curBlock = 0;
+        if (nBytes > 0) totalBytesRead += nBytes;
         while (nBytes > 0) 
         {
             /* Update the CRC every time we read in a new block. */
             crc.update(blockBuf, 0, nBytes);
+            boolean finishedFlag = (totalBytesRead == fileBytes);
 
-            compressor.reset();
+            SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag);
+            executor.execute(worker);
 
-            /* If we saved a dictionary from the last block, prime the deflater with it */
-            if (hasDict) 
-            {
-                compressor.setDictionary(dictBuf);
-            }
-            compressor.setInput(blockBuf, 0, nBytes);
-
-            if (totalBytesRead == fileBytes) 
-            {
-                /* If we've read all the bytes in the file, this is the last block.
-                     We have to clean out the deflater properly */
-                if (!compressor.finished()) 
-                {
-                    compressor.finish();
-                    while (!compressor.finished()) 
-                    {
-                        if (counter < nThreads)
-                        {
-                            SingleBlockCompress curBlock = new SingleBlockCompress(compressor);
-                            threads[counter] = new Thread(curBlock);
-                            threads[counter].start();
-                            outStreamMap.put(counter, curBlock.getValue());
-                        }
-                        else
-                        {
-                            int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.NO_FLUSH);
-                            outStreamMap.put(counter, 
-                                            new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
-                            if (deflatedBytes > 0) 
-                            {
-                                outStream.write(cmpBlockBuf, 0, deflatedBytes);
-                            }
-                        }
-                        counter++;
-                    }
-                }
-            } 
-            else 
-            {
-                /* Otherwise, just deflate and then write the compressed block out. Not using SYNC_FLUSH here leads to
-                some issues, but using it probably results in less efficient compression. There's probably a better
-                way to deal with this. */
-                if (counter < nThreads)
-                {
-                    SingleBlockCompress curBlock = new SingleBlockCompress(compressor);
-                    threads[counter] = new Thread(curBlock);
-                    threads[counter].start();
-                    outStreamMap.put(counter, curBlock.getValue());
-                }
-                else
-                {
-                    int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.NO_FLUSH);
-                    outStreamMap.put(counter, 
-                                    new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
-                }
-                counter++;
-            }
-
-                /* If we read in enough bytes in this block, store the last part as the dictionary for the
-                next iteration */
-            if (nBytes >= DICT_SIZE) 
-            {
-                System.arraycopy(blockBuf, nBytes - DICT_SIZE, dictBuf, 0, DICT_SIZE);
-                hasDict = true;
-            } 
-            else 
-            {
-                hasDict = false;
-            }
-            nBytes = inStream.read(blockBuf);
-            totalBytesRead += nBytes;
+            nBytes = push.read(blockBuf, 0, BLOCK_SIZE);
+            if (nBytes > 0) totalBytesRead += nBytes;
+            curBlock++;
         }
 
-        int actualThreads = nThreads < counter ? nThreads : counter;
-        for (int i = 0; i < actualThreads; i++)
-        {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
+        executor.shutdown();
+        while(!executor.isTerminated()) {}
         
-        counter = 0;
-        while (! outStreamMap.isEmpty())
+        
+        curBlock = 0;
+        while (! SharedVariables.outStreamMap.isEmpty())
         {
-            Tuple<Integer, byte[]> compressedBlock = 
-            outStreamMap.remove(counter);
-            if (compressedBlock != null && compressedBlock.x > 0)
+            byte[] cmpBlockBuf = SharedVariables.outStreamMap.remove(curBlock);
+            int deflatedBytes = SharedVariables.bytesMap.remove(curBlock);
+            if (cmpBlockBuf != null && deflatedBytes > 0)
             {
-                outStream.write(compressedBlock.y, 0, compressedBlock.x);
+                outStream.write(cmpBlockBuf, 0, deflatedBytes);
             }
-            counter++;
+            curBlock++;
         }
 
         /* Finally, write the trailer and then write to STDOUT */
@@ -215,49 +154,69 @@ class SingleThreadedGZipCompressor
 
 class SingleBlockCompress implements Runnable 
 {
-    private Tuple <Integer, byte[]> compressedBlock;
-    private byte[] cmpBlockBuf;
-    private Deflater compressor;
-    public final static int BLOCK_SIZE = 131072; // 128 KB
+    private byte[] blockBuf;
+    private int blockId;
+    private int nBytes;
+    private boolean finishFlag;
 
 
-    public SingleBlockCompress (Deflater compressor)
+    public SingleBlockCompress (byte[] blockBuf, int blockBytes, int id, boolean flag)
     {
-        this.compressor = compressor;
-        this.cmpBlockBuf = new byte[BLOCK_SIZE * 2];
-        this.compressedBlock = new Tuple<Integer, byte[]>(0, cmpBlockBuf);
+        this.blockId = id;
+        this.finishFlag = flag;
+        this.nBytes = blockBytes;
+        this.blockBuf = new byte[SharedVariables.BLOCK_SIZE];
+        System.arraycopy(blockBuf, 0, this.blockBuf, 0, blockBytes);
     }
 
     // do compression on one block
-
     public void run()
     {
-        synchronized(compressor)
+        Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+
+        byte[] cmpBlockBuf = new byte[SharedVariables.BLOCK_SIZE * 2];
+        byte[] dictBuf = new byte[SharedVariables.DICT_SIZE];
+
+        compressor.reset();
+
+        if (SharedVariables.primingMap.containsKey(blockId-1))
+        {
+            compressor.setDictionary(SharedVariables.primingMap.get(blockId-1));
+        }
+
+        compressor.setInput(blockBuf, 0, nBytes);
+
+        if (finishFlag)
+        {
+            if (!compressor.finished()) 
+                {
+                    compressor.finish();
+                    while (!compressor.finished()) 
+                    {
+                        // need to be modified
+                        int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.SYNC_FLUSH);
+                        SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
+                        SharedVariables.bytesMap.put(blockId, deflatedBytes);
+                    }
+                }
+        }
+        else
         {
             int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.SYNC_FLUSH);
-            compressedBlock.x = deflatedBytes;
-            compressedBlock.y = cmpBlockBuf;
+            SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
+            SharedVariables.bytesMap.put(blockId, deflatedBytes);
+        }
+
+        if (nBytes >= SharedVariables.DICT_SIZE)
+        {
+            System.arraycopy(blockBuf, nBytes - SharedVariables.DICT_SIZE, dictBuf, 0, SharedVariables.DICT_SIZE);
+            SharedVariables.primingMap.put(blockId, dictBuf);
         }
 
     }
 
-    public Tuple<Integer, byte[]> getValue()
-    {
-        return compressedBlock;
-    }
-
 }
 
-
-class Tuple <X, Y> {
-    public X x;
-    public Y y;
-    public Tuple(X x, Y y)
-    {
-        this.x = x;
-        this.y = y;
-    }
-}
 
 public class Pigzj
 {
