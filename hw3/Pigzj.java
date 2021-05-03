@@ -20,8 +20,6 @@ class SharedVariables
 
 class SingleThreadedGZipCompressor 
 {
-    public final static int BLOCK_SIZE = 131072; // 128 KB
-    public final static int DICT_SIZE = 32768; // 32 KB
     private final static int GZIP_MAGIC = 0x8b1f;
     private final static int TRAILER_SIZE = 8;
     private int nThreads;
@@ -92,12 +90,12 @@ class SingleThreadedGZipCompressor
         this.crc.reset();
 
         /* Buffers for input blocks, compressed bocks, and dictionaries */
-        byte[] blockBuf = new byte[BLOCK_SIZE];
+        byte[] blockBuf = new byte[SharedVariables.BLOCK_SIZE];
         // byte[] cmpBlockBuf = new byte[BLOCK_SIZE * 2];
         // byte[] dictBuf = new byte[DICT_SIZE];
         // Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 
-        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);;
 
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
@@ -106,10 +104,15 @@ class SingleThreadedGZipCompressor
         // InputStream inStream = new FileInputStream(file);
         InputStream inStream = System.in;
         PushbackInputStream push = new PushbackInputStream(inStream);
+        if (push.available() <= 0)
+        {
+            System.err.println("no input from stdin");
+            System.exit(1);
+        }
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = push.read(blockBuf, 0, BLOCK_SIZE);
+        int nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
         while (nBytes > 0) 
@@ -121,7 +124,7 @@ class SingleThreadedGZipCompressor
             SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag);
             executor.execute(worker);
 
-            nBytes = push.read(blockBuf, 0, BLOCK_SIZE);
+            nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
         }
@@ -240,6 +243,12 @@ public class Pigzj
             System.exit(1);
         }
         else nThreads = (int) Integer.parseInt(args[1]);
+
+        if (nThreads <= 0)
+        {
+            System.err.println("Thread number should be positive");
+            System.exit(1);
+        }
 
         // System.out.println(nThreads);
 
