@@ -141,8 +141,8 @@ class SingleThreadedGZipCompressor
         int counter = 0;
         while (counter < curBlock)
         {
-            byte[] cmpBlockBuf = SharedVariables.outStreamMap.remove(curBlock);
-            int deflatedBytes = SharedVariables.bytesMap.remove(curBlock);
+            byte[] cmpBlockBuf = SharedVariables.outStreamMap.remove(counter);
+            int deflatedBytes = SharedVariables.bytesMap.remove(counter);
             if (cmpBlockBuf != null && deflatedBytes > 0)
             {
                 outStream.write(cmpBlockBuf, 0, deflatedBytes);
