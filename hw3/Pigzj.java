@@ -103,16 +103,17 @@ class SingleThreadedGZipCompressor
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
         InputStream inStream = System.in;
-        if (inStream == null)
+        if (inStream.available() <= 0)
         {
             System.err.println("no input from stdin");
             System.exit(1);
         }
-        PushbackInputStream push = new PushbackInputStream(inStream);
+        // PushbackInputStream push = new PushbackInputStream(inStream);
 
         long totalBytesRead = 0;
-        // boolean hasDict = false;
-        int nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        boolean hasDict = false;
+        int nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
         while (nBytes > 0) 
@@ -121,10 +122,13 @@ class SingleThreadedGZipCompressor
             crc.update(blockBuf, 0, nBytes);
             boolean finishedFlag = (totalBytesRead == fileBytes);
 
-            SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag);
+            hasDict = (prevBytes >= SharedVariables.DICT_SIZE);
+            
+            SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag, hasDict);
             executor.execute(worker);
 
-            nBytes = push.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+            prevBytes = nBytes;
+            nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
   
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
@@ -167,13 +171,14 @@ class SingleBlockCompress implements Runnable
     private int blockId;
     private int nBytes;
     private boolean finishFlag;
+    private boolean hasDict;
 
-
-    public SingleBlockCompress (byte[] blockBuf, int blockBytes, int id, boolean flag)
+    public SingleBlockCompress (byte[] blockBuf, int blockBytes, int id, boolean flag, boolean hasDict)
     {
         this.blockId = id;
         this.finishFlag = flag;
         this.nBytes = blockBytes;
+        this.hasDict = hasDict;
         this.blockBuf = new byte[SharedVariables.BLOCK_SIZE];
         System.arraycopy(blockBuf, 0, this.blockBuf, 0, blockBytes);
     }
@@ -188,9 +193,10 @@ class SingleBlockCompress implements Runnable
 
         compressor.reset();
 
-        if (SharedVariables.primingMap.containsKey(blockId-1))
+        if (hasDict)
         {
-            compressor.setDictionary(SharedVariables.primingMap.get(blockId-1));
+            while (! SharedVariables.primingMap.containsKey(blockId-1));
+            compressor.setDictionary(SharedVariables.primingMap.remove(blockId-1));
         }
 
         compressor.setInput(blockBuf, 0, nBytes);
