@@ -12,10 +12,21 @@ class SharedVariables
 {
     public final static int BLOCK_SIZE = 131072; // 128 KB
     public final static int DICT_SIZE = 32768; // 32 KB
-    public static ConcurrentHashMap<Integer, byte[]> outStreamMap = new ConcurrentHashMap<Integer, byte[]>();
-    public static ConcurrentHashMap<Integer, Integer> bytesMap = new ConcurrentHashMap<Integer, Integer>();
+    // public static ConcurrentHashMap<Integer, byte[]> outStreamMap = new ConcurrentHashMap<Integer, byte[]>();
+    // public static ConcurrentHashMap<Integer, Integer> bytesMap = new ConcurrentHashMap<Integer, Integer>();
     public static ConcurrentHashMap<Integer, byte[]> primingMap = new ConcurrentHashMap<Integer, byte[]>();
+    public static ConcurrentHashMap<Integer, Tuple<Integer, byte[]>> blockMap =
+    new ConcurrentHashMap<Integer, Tuple<Integer, byte[]>>();
+}
 
+class Tuple<X, Y>{
+    public final X num;
+    public final Y value;
+    public Tuple(X x, Y y) 
+    {
+        this.num = x;
+        this.value = y;
+    }
 }
 
 class SingleThreadedGZipCompressor 
@@ -141,8 +152,11 @@ class SingleThreadedGZipCompressor
         int counter = 0;
         while (counter < curBlock)
         {
-            byte[] cmpBlockBuf = SharedVariables.outStreamMap.remove(counter);
-            int deflatedBytes = SharedVariables.bytesMap.remove(counter);
+            Tuple<Integer, byte[]> compressedBlock = SharedVariables.blockMap.remove(counter);
+            byte[] cmpBlockBuf = compressedBlock.value;
+            int deflatedBytes = compressedBlock.num;
+            // byte[] cmpBlockBuf = SharedVariables.outStreamMap.remove(counter);
+            // int deflatedBytes = SharedVariables.bytesMap.remove(counter);
             if (cmpBlockBuf != null && deflatedBytes > 0)
             {
                 outStream.write(cmpBlockBuf, 0, deflatedBytes);
@@ -207,16 +221,18 @@ class SingleBlockCompress implements Runnable
                     {
                         // need to be modified
                         int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.SYNC_FLUSH);
-                        SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
-                        SharedVariables.bytesMap.put(blockId, deflatedBytes);
+                        SharedVariables.blockMap.put(blockId, new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
+                        // SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
+                        // SharedVariables.bytesMap.put(blockId, deflatedBytes);
                     }
                 }
         }
         else
         {
             int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.SYNC_FLUSH);
-            SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
-            SharedVariables.bytesMap.put(blockId, deflatedBytes);
+            SharedVariables.blockMap.put(blockId, new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
+            // SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
+            // SharedVariables.bytesMap.put(blockId, deflatedBytes);
         }
 
         if (nBytes >= SharedVariables.DICT_SIZE)
