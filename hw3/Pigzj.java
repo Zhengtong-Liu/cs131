@@ -138,9 +138,8 @@ class SingleThreadedGZipCompressor
         executor.shutdown();
         while(!executor.isTerminated()) {}
         
-        
-        curBlock = 0;
-        while (! SharedVariables.outStreamMap.isEmpty())
+        int counter = 0;
+        while (counter <= curBlock)
         {
             byte[] cmpBlockBuf = SharedVariables.outStreamMap.remove(curBlock);
             int deflatedBytes = SharedVariables.bytesMap.remove(curBlock);
@@ -148,7 +147,7 @@ class SingleThreadedGZipCompressor
             {
                 outStream.write(cmpBlockBuf, 0, deflatedBytes);
             }
-            curBlock++;
+            counter++;
         }
 
         /* Finally, write the trailer and then write to STDOUT */
