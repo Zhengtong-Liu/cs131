@@ -169,12 +169,17 @@ class SingleThreadedGZipCompressor
         writeTrailer(fileBytes, trailerBuf, 0);
         outStream.write(trailerBuf);
 
-        try {
-            outStream.writeTo(System.out);
-        } catch (IOException e) {
-            System.err.println("write error: " + e.getMessage());
-            System.exit(1);
-        }
+        byte [] outBytes = outStream.toByteArray();
+        FileOutputStream output = new FileOutputStream(FileDescriptor.out);
+        output.write(outBytes);
+        output.close();
+
+        // try {
+        //     outStream.writeTo(System.out);
+        // } catch (IOException e) {
+        //     System.err.println("write error: " + e.getMessage());
+        //     System.exit(1);
+        // }
     }
 }
 
