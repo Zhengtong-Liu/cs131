@@ -171,7 +171,12 @@ class SingleThreadedGZipCompressor
 
         byte [] outBytes = outStream.toByteArray();
         FileOutputStream output = new FileOutputStream(FileDescriptor.out);
-        output.write(outBytes);
+        try {
+            output.write(outBytes);
+        } catch (IOException e) {
+            System.err.println("write error: " + e.getMessage());
+            System.exit(1);
+        }
         output.close();
 
         // try {
