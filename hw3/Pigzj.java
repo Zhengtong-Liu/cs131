@@ -179,12 +179,6 @@ class SingleThreadedGZipCompressor
         }
         output.close();
 
-        // try {
-        //     outStream.writeTo(System.out);
-        // } catch (IOException e) {
-        //     System.err.println("write error: " + e.getMessage());
-        //     System.exit(1);
-        // }
     }
 }
 
@@ -209,11 +203,17 @@ class SingleBlockCompress implements Runnable
     // do compression on one block
     public void run()
     {
+        byte[] dictBuf = new byte[SharedVariables.DICT_SIZE];
+
+        if (nBytes >= SharedVariables.DICT_SIZE)
+        {
+            System.arraycopy(blockBuf, nBytes - SharedVariables.DICT_SIZE, dictBuf, 0, SharedVariables.DICT_SIZE);
+            SharedVariables.primingMap.put(blockId, dictBuf);
+        }
+
         Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 
         byte[] cmpBlockBuf = new byte[SharedVariables.BLOCK_SIZE * 2];
-        byte[] dictBuf = new byte[SharedVariables.DICT_SIZE];
-
         compressor.reset();
 
 
@@ -243,12 +243,6 @@ class SingleBlockCompress implements Runnable
             SharedVariables.blockMap.put(blockId, new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
             // SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
             // SharedVariables.bytesMap.put(blockId, deflatedBytes);
-        }
-
-        if (nBytes >= SharedVariables.DICT_SIZE)
-        {
-            System.arraycopy(blockBuf, nBytes - SharedVariables.DICT_SIZE, dictBuf, 0, SharedVariables.DICT_SIZE);
-            SharedVariables.primingMap.put(blockId, dictBuf);
         }
 
     }
