@@ -125,7 +125,7 @@ class SingleThreadedGZipCompressor
         long totalBytesRead = 0;
         // boolean hasDict = false;
         try {
-            input.available();
+            System.out.println(input.available());
         } catch (IOException e)
         {
             System.err.println("read error: " + e.getMessage());
