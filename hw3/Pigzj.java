@@ -113,17 +113,25 @@ class SingleThreadedGZipCompressor
         long fileBytes = System.in.available();
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
-        InputStream inStream = System.in;
-        if (inStream.available() <= 0)
-        {
-            System.err.println("no input from stdin");
-            System.exit(1);
-        }
+        // InputStream inStream = System.in;
+        FileInputStream input = new FileInputStream(FileDescriptor.in);
+        // if (inStream.available() <= 0)
+        // {
+        //     System.err.println("no input from stdin");
+        //     System.exit(1);
+        // }
         // PushbackInputStream push = new PushbackInputStream(inStream);
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        int nBytes = 0;
+        try {
+          nBytes  = input.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        } catch (IOException e)
+        {
+            System.err.println("read error: " + e.getMessage());
+            System.exit(1);
+        }
         // int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
@@ -139,7 +147,7 @@ class SingleThreadedGZipCompressor
             executor.execute(worker);
 
             // prevBytes = nBytes;
-            nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+            nBytes = input.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
   
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
@@ -148,6 +156,7 @@ class SingleThreadedGZipCompressor
 
         executor.shutdown();
         while(!executor.isTerminated()) {}
+        input.close();
         
         int counter = 0;
         while (counter < curBlock)
@@ -260,24 +269,34 @@ public class Pigzj
         //     System.in.read(current_buf);
         //     System.out.println(current_buf);
         // }
-
+        int maxThreads = Runtime.getRuntime().availableProcessors();
         int nThreads = 0;
         if (args.length == 0) 
         {
-            nThreads = Runtime.getRuntime().availableProcessors();
+            nThreads = maxThreads;
         }
         else if ((! args[0].equals("-p")) || (args.length != 2))
         {
             System.err.println("Usage: Pigzj only supports -p processes option");
             System.exit(1);
         }
-        else nThreads = (int) Integer.parseInt(args[1]);
-
-        if (nThreads <= 0)
+        else 
         {
-            System.err.println("Thread number should be positive");
-            System.exit(1);
+            nThreads = (int) Integer.parseInt(args[1]);
+            if (nThreads <= 0)
+            {
+                System.err.println("Thread number should be positive");
+                System.exit(1);
+            }
+            else if (nThreads > maxThreads)
+            {
+                System.err.println("Resource unavailable: too many threads specified");
+                System.exit(1);
+            }
+
         }
+
+        
 
         // System.out.println(nThreads);
 
@@ -298,13 +317,6 @@ public class Pigzj
         // }
 
         SingleThreadedGZipCompressor cmp = new SingleThreadedGZipCompressor(nThreads);
-        try {
-            cmp.compress(); 
-        }
-        catch (IOException e)
-        {
-            System.out.println(e.getCause());
-            System.exit(1);
-        }
+        cmp.compress(); 
     }
 }
