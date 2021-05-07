@@ -107,7 +107,6 @@ class SingleThreadedGZipCompressor
         // byte[] dictBuf = new byte[DICT_SIZE];
         // Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 
-        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
@@ -140,6 +139,7 @@ class SingleThreadedGZipCompressor
         // int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         while (nBytes > 0) 
         {
             crc.update(blockBuf, 0, nBytes);
