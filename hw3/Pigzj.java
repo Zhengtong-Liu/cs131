@@ -117,7 +117,11 @@ class SingleThreadedGZipCompressor
         // InputStream inStream = System.in;
         FileInputStream input = new FileInputStream(FileDescriptor.in);
         // PushbackInputStream push = new PushbackInputStream(inStream);
-
+        if (System.in == null)
+        {
+            System.err.println("read error: cannot read from stdin");
+            System.exit(1);
+        }
         long totalBytesRead = 0;
         // boolean hasDict = false;
         int nBytes = -1;
