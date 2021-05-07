@@ -106,14 +106,14 @@ class SingleThreadedGZipCompressor
         // byte[] dictBuf = new byte[DICT_SIZE];
         // Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
         long fileBytes = System.in.available();
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
-        // InputStream inStream = System.in;
-        FileInputStream input = new FileInputStream(FileDescriptor.in);
+        InputStream inStream = System.in;
         // if (inStream.available() <= 0)
         // {
         //     System.err.println("no input from stdin");
@@ -123,19 +123,10 @@ class SingleThreadedGZipCompressor
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        try {
-            System.out.println(input.available());
-        } catch (IOException e)
-        {
-            System.err.println("read error: " + e.getMessage());
-            System.exit(1);
-        }
-        int nBytes = input.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
-        
+        int nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
         // int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
-        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         while (nBytes > 0) 
         {
             /* Update the CRC every time we read in a new block. */
@@ -148,7 +139,7 @@ class SingleThreadedGZipCompressor
             executor.execute(worker);
 
             // prevBytes = nBytes;
-            nBytes = input.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+            nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
   
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
@@ -157,7 +148,6 @@ class SingleThreadedGZipCompressor
 
         executor.shutdown();
         while(!executor.isTerminated()) {}
-        input.close();
         
         int counter = 0;
         while (counter < curBlock)
