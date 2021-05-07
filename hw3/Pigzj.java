@@ -124,14 +124,15 @@ class SingleThreadedGZipCompressor
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = 0;
         try {
-          nBytes  = input.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+            input.available();
         } catch (IOException e)
         {
             System.err.println("read error: " + e.getMessage());
             System.exit(1);
         }
+        int nBytes = input.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        
         // int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
