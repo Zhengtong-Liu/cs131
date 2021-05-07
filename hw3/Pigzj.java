@@ -102,6 +102,7 @@ class SingleThreadedGZipCompressor
 
         /* Buffers for input blocks, compressed bocks, and dictionaries */
         byte[] blockBuf = new byte[SharedVariables.BLOCK_SIZE];
+        byte[] prevBuf = new byte[SharedVariables.BLOCK_SIZE];
         // byte[] cmpBlockBuf = new byte[BLOCK_SIZE * 2];
         // byte[] dictBuf = new byte[DICT_SIZE];
         // Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
@@ -110,37 +111,48 @@ class SingleThreadedGZipCompressor
 
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
-        long fileBytes = System.in.available();
+        // long fileBytes = System.in.available();
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
-        InputStream inStream = System.in;
-        // if (inStream.available() <= 0)
-        // {
-        //     System.err.println("no input from stdin");
-        //     System.exit(1);
-        // }
+        // InputStream inStream = System.in;
+        FileInputStream input = new FileInputStream(FileDescriptor.in);
         // PushbackInputStream push = new PushbackInputStream(inStream);
 
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
+        int nBytes = -1;
+        try {
+            nBytes = input.read(blockBuf);
+        } catch (IOException e)
+        {
+            System.err.println("read error: " + e.getMessage());
+            System.exit(1);
+        }
+        // if (nBytes < 0)
+        // {
+        //     System.err.println("no input from stdin");
+        //     System.exit(1);
+        // }
         // int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
         while (nBytes > 0) 
         {
-            /* Update the CRC every time we read in a new block. */
             crc.update(blockBuf, 0, nBytes);
-            boolean finishedFlag = (totalBytesRead == fileBytes);
+
+            System.arraycopy(blockBuf, 0, prevBuf, 0, SharedVariables.BLOCK_SIZE);
+            int curBytes = input.read(blockBuf);
+            /* Update the CRC every time we read in a new block. */
+            boolean finishedFlag = (curBytes == -1);
 
             // hasDict = (prevBytes >= SharedVariables.DICT_SIZE);
             
-            SingleBlockCompress worker = new SingleBlockCompress(blockBuf, nBytes, curBlock, finishedFlag);
+            SingleBlockCompress worker = new SingleBlockCompress(prevBuf, nBytes, curBlock, finishedFlag);
             executor.execute(worker);
 
             // prevBytes = nBytes;
-            nBytes = inStream.read(blockBuf, 0, SharedVariables.BLOCK_SIZE);
-  
+            
+            nBytes = curBytes;
             if (nBytes > 0) totalBytesRead += nBytes;
             curBlock++;
         }
@@ -149,6 +161,8 @@ class SingleThreadedGZipCompressor
         executor.shutdown();
         while(!executor.isTerminated()) {}
         
+        input.close();
+
         int counter = 0;
         while (counter < curBlock)
         {
@@ -166,7 +180,7 @@ class SingleThreadedGZipCompressor
 
         /* Finally, write the trailer and then write to STDOUT */
         byte[] trailerBuf = new byte[TRAILER_SIZE];
-        writeTrailer(fileBytes, trailerBuf, 0);
+        writeTrailer(totalBytesRead, trailerBuf, 0);
         outStream.write(trailerBuf);
 
         byte [] outBytes = outStream.toByteArray();
@@ -229,7 +243,6 @@ class SingleBlockCompress implements Runnable
                     compressor.finish();
                     while (!compressor.finished()) 
                     {
-                        // need to be modified
                         int deflatedBytes = compressor.deflate(cmpBlockBuf, 0, cmpBlockBuf.length, Deflater.SYNC_FLUSH);
                         SharedVariables.blockMap.put(blockId, new Tuple<Integer, byte[]>(deflatedBytes, cmpBlockBuf));
                         // SharedVariables.outStreamMap.put(blockId, cmpBlockBuf);
