@@ -121,6 +121,7 @@ class MutliThreadedGZipCompressor
         //     System.exit(1);
         // }
         FileInputStream input = new FileInputStream(FileDescriptor.in);
+        System.out.println(input.available());
         // PushbackInputStream push = new PushbackInputStream(inStream);
         long totalBytesRead = 0;
         // boolean hasDict = false;
@@ -130,7 +131,6 @@ class MutliThreadedGZipCompressor
         //     System.err.println("read error: " + e.getMessage());
         //     System.exit(1);
         // }
-        System.out.println(input.available());
         if (input.available() <= 0 && nBytes >= 0)
         {
             System.err.println("read error: cannot read from stdin");
