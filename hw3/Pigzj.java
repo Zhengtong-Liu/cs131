@@ -130,6 +130,7 @@ class MutliThreadedGZipCompressor
         //     System.err.println("read error: " + e.getMessage());
         //     System.exit(1);
         // }
+        System.out.println(input.available());
         if (input.available() <= 0 && nBytes >= 0)
         {
             System.err.println("read error: cannot read from stdin");

@@ -720,8 +720,32 @@ to save (real) time.
 ========================================================================
 [Section 4] Discussion on file size using the three compression programs
 
+==== Test 1 ====
+
 ==== Commands ====
 input=test.txt
+time gzip <$input >gzip.gz
+time pigz <$input >pigz.gz
+time java Pigzj <$input >Pigzj.gz
+ls -l gzip.gz pigz.gz Pigzj.gz
+
+pigz -d <Pigzj.gz | cmp - $input
+
+==== Test 2 ====
+
+==== Commands ====
+input=README.txt
+time gzip <$input >gzip.gz
+time pigz <$input >pigz.gz
+time java Pigzj <$input >Pigzj.gz
+ls -l gzip.gz pigz.gz Pigzj.gz
+
+pigz -d <Pigzj.gz | cmp - $input
+
+==== Test 3 ====
+
+==== Commands ====
+input=mylong.txt
 time gzip <$input >gzip.gz
 time pigz <$input >pigz.gz
 time java Pigzj <$input >Pigzj.gz
