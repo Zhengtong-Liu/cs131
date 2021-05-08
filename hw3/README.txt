@@ -803,7 +803,7 @@ sys	    0m0.003s
 
 real	0m0.060s
 user	0m0.035s
-sys	0m0.028s
+sys	    0m0.028s
 [zhengton@lnxsrv11 ~/cs131/hw3]$ ls -l gzip.gz pigz.gz Pigzj.gz
 -rw-r--r-- 1 zhengton csugrad 7570 May  8 02:26 gzip.gz
 -rw-r--r-- 1 zhengton csugrad 7560 May  8 02:26 pigz.gz
