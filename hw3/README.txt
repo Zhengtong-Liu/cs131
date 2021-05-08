@@ -85,6 +85,25 @@ the thread worker. To make the dictBuf available for the other threads, I
 changed the order of the original codes so that the dictBuf is written first
 if required. 
 
+Several special test cases mentioned in spec:
+
+[zhengton@lnxsrv11 ~/cs131/hw3]$ java Pigzj </dev/zero >/dev/full
+read error: cannot read from stdin
+
+[zhengton@lnxsrv11 ~/cs131/hw3]$ java Pigzj <test.txt >/dev/full
+write error: No space left on device
+
+[zhengton@lnxsrv11 ~/cs131/hw3]$ java Pigzj -p 100000 <test.txt
+Resource unavailable: too many threads specified
+
+[zhengton@lnxsrv11 ~/cs131/hw3]$ java Pigzj test.txt
+Usage: Pigzj only supports -p processes option
+
+[zhengton@lnxsrv11 ~/cs131/hw3]$ cat /etc/passwd | java Pigzj | cat >output1
+[zhengton@lnxsrv11 ~/cs131/hw3]$ java Pigzj </etc/passwd >output2
+[zhengton@lnxsrv11 ~/cs131/hw3]$ cmp output1 output2
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+
 
 ========================================================================
 ========================================================================
@@ -731,6 +750,32 @@ ls -l gzip.gz pigz.gz Pigzj.gz
 
 pigz -d <Pigzj.gz | cmp - $input
 
+==== Outputs ====
+
+[zhengton@lnxsrv11 ~/cs131/hw3]$ input=test.txt
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time gzip <$input >gzip.gz
+
+real	0m0.004s
+user	0m0.000s
+sys	    0m0.002s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time pigz <$input >pigz.gz
+
+real	0m0.004s
+user	0m0.002s
+sys	    0m0.000s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time java Pigzj <$input >Pigzj.gz
+
+real	0m0.060s
+user	0m0.038s
+sys	    0m0.023s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ ls -l gzip.gz pigz.gz Pigzj.gz
+-rw-r--r-- 1 zhengton csugrad 26 May  8 02:26 gzip.gz
+-rw-r--r-- 1 zhengton csugrad 26 May  8 02:26 pigz.gz
+-rw-r--r-- 1 zhengton csugrad 26 May  8 02:26 Pigzj.gz
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+[zhengton@lnxsrv11 ~/cs131/hw3]$ pigz -d <Pigzj.gz | cmp - $input
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+
 ==== Test 2 ====
 
 ==== Commands ====
@@ -741,6 +786,31 @@ time java Pigzj <$input >Pigzj.gz
 ls -l gzip.gz pigz.gz Pigzj.gz
 
 pigz -d <Pigzj.gz | cmp - $input
+
+==== Outputs ====
+[zhengton@lnxsrv11 ~/cs131/hw3]$ input=README.txt
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time gzip <$input >gzip.gz
+
+real	0m0.005s
+user	0m0.002s
+sys	    0m0.001s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time pigz <$input >pigz.gz
+
+real	0m0.005s
+user	0m0.001s
+sys	    0m0.003s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time java Pigzj <$input >Pigzj.gz
+
+real	0m0.060s
+user	0m0.035s
+sys	0m0.028s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ ls -l gzip.gz pigz.gz Pigzj.gz
+-rw-r--r-- 1 zhengton csugrad 7570 May  8 02:26 gzip.gz
+-rw-r--r-- 1 zhengton csugrad 7560 May  8 02:26 pigz.gz
+-rw-r--r-- 1 zhengton csugrad 7560 May  8 02:26 Pigzj.gz
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+[zhengton@lnxsrv11 ~/cs131/hw3]$ pigz -d <Pigzj.gz | cmp - $input
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
 
 ==== Test 3 ====
 
@@ -753,3 +823,86 @@ ls -l gzip.gz pigz.gz Pigzj.gz
 
 pigz -d <Pigzj.gz | cmp - $input
 
+==== Outputs ====
+[zhengton@lnxsrv11 ~/cs131/hw3]$ input=mylong.txt
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time gzip <$input >gzip.gz
+
+real	0m0.043s
+user	0m0.030s
+sys	    0m0.003s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time pigz <$input >pigz.gz
+
+real	0m0.018s
+user	0m0.032s
+sys	    0m0.005s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time java Pigzj <$input >Pigzj.gz
+
+real	0m0.085s
+user	0m0.077s
+sys	    0m0.037s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ ls -l gzip.gz pigz.gz Pigzj.gz
+-rw-r--r-- 1 zhengton csugrad 27285 May  8 02:27 gzip.gz
+-rw-r--r-- 1 zhengton csugrad 27517 May  8 02:27 pigz.gz
+-rw-r--r-- 1 zhengton csugrad 27560 May  8 02:27 Pigzj.gz
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+[zhengton@lnxsrv11 ~/cs131/hw3]$ pigz -d <Pigzj.gz | cmp - $input
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+
+
+==== Test4 ====
+
+==== Commands ====
+input=/usr/local/cs/jdk-16.0.1/lib/modules
+time gzip <$input >gzip.gz
+time pigz <$input >pigz.gz
+time java Pigzj <$input >Pigzj.gz
+ls -l gzip.gz pigz.gz Pigzj.gz
+
+# This checks Pigzj's output.
+pigz -d <Pigzj.gz | cmp - $input
+
+==== Outputs ====
+[zhengton@lnxsrv11 ~/cs131/hw3]$ input=/usr/local/cs/jdk-16.0.1/lib/modules
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time gzip <$input >gzip.gz
+
+real	0m8.115s
+user	0m7.324s
+sys	    0m0.064s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time pigz <$input >pigz.gz
+
+real	0m3.293s
+user	0m7.087s
+sys	    0m0.057s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ time java Pigzj <$input >Pigzj.gz
+
+real	0m3.832s
+user	0m8.717s
+sys	    0m0.364s
+[zhengton@lnxsrv11 ~/cs131/hw3]$ ls -l gzip.gz pigz.gz Pigzj.gz
+-rw-r--r-- 1 zhengton csugrad 43261332 May  8 02:30 gzip.gz
+-rw-r--r-- 1 zhengton csugrad 43134815 May  8 02:30 pigz.gz
+-rw-r--r-- 1 zhengton csugrad 43142004 May  8 02:30 Pigzj.gz
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+[zhengton@lnxsrv11 ~/cs131/hw3]$ # This checks Pigzj's output.
+[zhengton@lnxsrv11 ~/cs131/hw3]$ pigz -d <Pigzj.gz | cmp - $input
+[zhengton@lnxsrv11 ~/cs131/hw3]$ 
+
+==== Observations ====
+Notice that as the file size is relatively small, gzip and pigz performs better 
+than Pigzj. For instance, when the file size is only 6 bytes, gzip and pigz takes
+only 0.005 seconds to finish the compression while Pigzj costs 0.06 seconds, while
+is considerably longer than the previous two. However, as the file size gets larger,
+the difference gets smaller. For the compression of mylong.txt, which is 3864890 bytes
+long, gzip takes 0.043 seconds, pigz takes 0.018 seconds, and Pigzj takes 0.085 seconds.
+From this data, the speed difference is not that significant than that when compressing
+the small files, and pigz has shown the potential to be faster than gzip. When doing
+compression on the large file, i.e. the source code of some modules in Java with 
+125942959 bytes, gzip takes much longer time than the other two. Note that gzip takes
+more than 8 seconds to do the compression, while pigz compressed in about 3 seconds, and
+Pigzj finished compression in 4 seconds. This shows that Pigzj is competitive in speed 
+to pigz as the file size scales up, and Pigzj, pigz achieves much higher speed than gzip
+as the file size scales up. Due to the parallelization and concurrent compression of 
+the input blocks, pigz and Pigzj are likely to perform better for large file compression,
+and pigz probably would be a bit faster than Pigzj.
+
+(Note: the discussion on the thread numbers used in different programs is in section 2)
