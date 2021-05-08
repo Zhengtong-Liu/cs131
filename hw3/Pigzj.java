@@ -29,7 +29,7 @@ class Tuple<X, Y>{
     }
 }
 
-class SingleThreadedGZipCompressor 
+class MutliThreadedGZipCompressor 
 {
     private final static int GZIP_MAGIC = 0x8b1f;
     private final static int TRAILER_SIZE = 8;
@@ -39,7 +39,7 @@ class SingleThreadedGZipCompressor
 
     private CRC32 crc = new CRC32();
 
-    public SingleThreadedGZipCompressor(int nThreads) 
+    public MutliThreadedGZipCompressor(int nThreads) 
     {
         // this.fileName = fileName;
         this.nThreads = nThreads;
@@ -322,7 +322,7 @@ public class Pigzj
         //     }
         // }
 
-        SingleThreadedGZipCompressor cmp = new SingleThreadedGZipCompressor(nThreads);
+        MutliThreadedGZipCompressor cmp = new MutliThreadedGZipCompressor(nThreads);
         cmp.compress(); 
     }
 }
