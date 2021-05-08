@@ -107,6 +107,7 @@ class SingleThreadedGZipCompressor
         // byte[] dictBuf = new byte[DICT_SIZE];
         // Deflater compressor = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
 
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
         // File file = new File(this.fileName);
         // long fileBytes = file.length();
@@ -114,32 +115,29 @@ class SingleThreadedGZipCompressor
         // System.out.println(fileBytes);
         // InputStream inStream = new FileInputStream(file);
         // InputStream inStream = System.in;
-        if (!FileDescriptor.in.valid())
-        {
-            System.err.println("read error: cannot read from stdin");
-            System.exit(1);
-        }
+        // if (!FileDescriptor.in.valid())
+        // {
+        //     System.err.println("read error: cannot read from stdin");
+        //     System.exit(1);
+        // }
         FileInputStream input = new FileInputStream(FileDescriptor.in);
         // PushbackInputStream push = new PushbackInputStream(inStream);
         long totalBytesRead = 0;
         // boolean hasDict = false;
-        int nBytes = -1;
-        try {
-            nBytes = input.read(blockBuf);
-        } catch (IOException e)
-        {
-            System.err.println("read error: " + e.getMessage());
-            System.exit(1);
-        }
-        // if (nBytes < 0)
+        int nBytes = input.read(blockBuf);
+        // catch (IOException e)
         // {
-        //     System.err.println("no input from stdin");
+        //     System.err.println("read error: " + e.getMessage());
         //     System.exit(1);
         // }
+        if (input.available() <= 0 && nBytes >= 0)
+        {
+            System.err.println("read error: cannot read from stdin");
+            System.exit(1);
+        }
         // int prevBytes = 0;
         int curBlock = 0;
         if (nBytes > 0) totalBytesRead += nBytes;
-        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         while (nBytes > 0) 
         {
             crc.update(blockBuf, 0, nBytes);
