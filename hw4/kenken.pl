@@ -47,9 +47,9 @@ check_sum(Expr, M) :-
     +(S, L) = Expr,
     check_sum_helper(S, L, M).
 
-check_mult_helper(1, [], _).
+check_mult_helper(Ans, [], _) :-
+    Ans =:= 1.
 check_mult_helper(Product, [Hd|Tl], M) :-
-    Product > 1,
     [R|C] = Hd, nth(R, M, Row), nth(C, Row, E),
     Rem is Product / E,
     check_mult_helper(Rem, Tl, M).
@@ -63,14 +63,14 @@ check_diff(Expr, M) :-
     [R1|C1] = J, [R2|C2] = K,
     nth(R1, M, Row1), nth(C1, Row1, E1),
     nth(R2, M, Row2), nth(C2, Row2, E2),
-    (D is E1 - E2; D is E2 - E1).
+    ((D =:= E1 - E2); (D =:= E2 - E1)).
 
 check_quot(Expr, M) :-
     /(Q, J, K) = Expr,
     [R1|C1] = J, [R2|C2] = K,
     nth(R1, M, Row1), nth(C1, Row1, E1),
     nth(R2, M, Row2), nth(C2, Row2, E2),
-    (Q is E1 / E2; Q is E2 / E1).
+    ((Q =:= E1 / E2); (Q =:= E2 / E1)).
 
 check_cage([], _).
 check_cage([Hd|Tl], M) :-
@@ -102,3 +102,10 @@ kenken_testcase(
    /(2, [6|4], [6|5])
   ]
 ).
+
+ken_answer([[5,6,3,4,1,2],
+     [6,1,4,5,2,3],
+     [4,5,2,3,6,1],
+     [3,4,1,2,5,6],
+     [2,3,6,1,4,5],
+     [1,2,5,6,3,4]]).
