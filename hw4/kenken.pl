@@ -1,14 +1,3 @@
-sudoku_cell(N, X) :-
-    % array size limits
-    len_row(X, N),
-    len_col(X, N),
-    % finish domain limits
-    within_domain(X, N),
-    maplist(fd_all_different, X),
-    transpose(X, T),
-    maplist(fd_all_different, T),
-    maplist(fd_labeling, X).
-
 len_row(X, N) :-
     length(X, N).
 
@@ -36,50 +25,97 @@ lists_firsts_rests([], [], []).
 lists_firsts_rests([[F|Os]|Rest], [F|Fs], [Os|Oss]) :-
         lists_firsts_rests(Rest, Fs, Oss).
 
+get_element(Coord, E, M) :-
+    [R|C] = Coord, nth(R, M, Row), nth(C, Row, E).
+
+
 check_sum_helper(0, [], _).
 check_sum_helper(Sum, [Hd|Tl], M) :-
-    Sum > 0,
-    [R|C] = Hd, nth(R, M, Row), nth(C, Row, E),
-    Rem is Sum - E,
+    get_element(Hd, E, M),
+    Rem #= Sum - E,
     check_sum_helper(Rem, Tl, M).
 
-check_sum(Expr, M) :-
-    +(S, L) = Expr,
-    check_sum_helper(S, L, M).
-
-check_mult_helper(Ans, [], _) :-
-    Ans =:= 1.
+check_mult_helper(1, [], _).
 check_mult_helper(Product, [Hd|Tl], M) :-
-    [R|C] = Hd, nth(R, M, Row), nth(C, Row, E),
-    Rem is Product / E,
+    get_element(Hd, E, M),
+    Rem #= Product / E,
     check_mult_helper(Rem, Tl, M).
 
-check_mult(Expr, M) :-
-    *(P, L) = Expr,
+check_constrain(M, +(S, L)) :-
+    check_sum_helper(S, L, M).
+
+check_constrain(M, *(P, L)) :-
     check_mult_helper(P, L, M).
 
-check_diff(Expr, M) :-
-    -(D, J, K) = Expr,
-    [R1|C1] = J, [R2|C2] = K,
-    nth(R1, M, Row1), nth(C1, Row1, E1),
-    nth(R2, M, Row2), nth(C2, Row2, E2),
-    ((D =:= E1 - E2); (D =:= E2 - E1)).
+check_constrain(M, -(D, J, K)) :-
+    get_element(J, E1, M), get_element(K, E2, M),
+    ((D #= E1 - E2); (D #= E2 - E1)).
 
-check_quot(Expr, M) :-
-    /(Q, J, K) = Expr,
-    [R1|C1] = J, [R2|C2] = K,
-    nth(R1, M, Row1), nth(C1, Row1, E1),
-    nth(R2, M, Row2), nth(C2, Row2, E2),
-    ((Q =:= E1 / E2); (Q =:= E2 / E1)).
-
-check_cage([], _).
-check_cage([Hd|Tl], M) :-
-    (check_sum(Hd, M); check_mult(Hd, M); check_diff(Hd, M); check_quot(Hd, M)),
-    check_cage(Tl, M).
+check_constrain(M, /(Q, J, K)) :-
+    get_element(J, E1, M), get_element(K, E2, M),
+    ((Q #= E1 / E2); (Q #= E2 / E1)).
 
 kenken(N, C, T) :-
-    sudoku_cell(N, T),
-    check_cage(C, T).
+    len_row(X, N),
+    len_col(X, N),
+    within_domain(X, N),
+    maplist(fd_all_different, X),
+    transpose(X, T),
+    maplist(fd_all_different, T),
+    maplist(check_constrain(T), C),
+    maplist(fd_labeling, X).
+
+plain_range(N, L) :-
+    findall(X, between(1, N, X), L).
+
+plain_within_domain(N, E) :-
+    plain_range(N, L),
+    member(E, L).   
+
+plain_all_unique(L) :-
+    length(L, Length),
+    sort(L, L_ordered),
+    length(L_ordered, Length_ordered),
+    Length == Length_ordered.
+
+plain_all_different(N, L) :-
+    maplist(plain_within_domain(N), L),
+    plain_all_unique(L).
+
+plain_check_sum_helper(0, [], _).
+plain_check_sum_helper(Sum, [Hd|Tl], M) :-
+    get_element(Hd, E, M),
+    Rem is (Sum - E),
+    check_sum_helper(Rem, Tl, M).
+
+plain_check_mult_helper(1.0, [], _).
+plain_check_mult_helper(Product, [Hd|Tl], M) :-
+    get_element(Hd, E, M),
+    Rem is (Product / E),
+    check_mult_helper(Rem, Tl, M).
+
+plain_check_constrain(M, +(S, L)) :-
+    check_sum_helper(S, L, M).
+
+plain_check_constrain(M, *(P, L)) :-
+    check_mult_helper(P, L, M).
+
+plain_check_constrain(M, -(D, J, K)) :-
+    get_element(J, E1, M), get_element(K, E2, M),
+    ((D is (E1 - E2)); (D is (E2 - E1))).
+
+plain_check_constrain(M, /(Q, J, K)) :-
+    get_element(J, E1, M), get_element(K, E2, M),
+    ((E1 is (Q * E2)); (E2 is (Q * E1))).
+
+plain_kenken(N, C, T) :-
+    len_row(T, N),
+    len_col(T, N),
+    transpose(T, X),
+    maplist(plain_all_different(N), T),
+    maplist(plain_all_different(N), X),
+    maplist(plain_check_constrain(T), C).
+
 
 
 kenken_testcase(
@@ -109,3 +145,25 @@ ken_answer([[5,6,3,4,1,2],
      [3,4,1,2,5,6],
      [2,3,6,1,4,5],
      [1,2,5,6,3,4]]).
+
+
+    /* use statistics/0 to measure performance
+    Kenken:
+
+    Memory               limit         in use            free
+
+        trail  stack      16383 Kb           11 Kb        16372 Kb
+        cstr   stack      16383 Kb           33 Kb        16350 Kb
+        global stack      32767 Kb            9 Kb        32758 Kb
+        local  stack      16383 Kb            6 Kb        16377 Kb
+        atom   table      32768 atoms      1799 atoms     30969 atoms
+
+    Times              since start      since last
+
+        user   time       0.005 sec       0.005 sec
+        system time       0.003 sec       0.003 sec
+        cpu    time       0.008 sec       0.008 sec
+        real   time      11.880 sec      11.880 sec
+
+
+    */
