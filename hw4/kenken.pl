@@ -1,34 +1,71 @@
-len_row(X, N) :-
-    length(X, N).
+% Note:
+% Some of the codes are from CS131 code help repo: 
+% https://github.com/CS131-TA-team/UCLA_CS131_CodeHelp
+% including len_col, within_domain, transpose, list_firsts_rests.
+% One function, plain_all_unique, is from the Discussion 1B Slides
+% Thanks the TAs team so much for help
+% I write some comments for these methods to make sure I understand them myself
 
+
+% Make sure the matrix X has N columns.
+% Base case: If the matrix is empty, then any numbers filled in the second
+% parameter is valid;
+% Recursive step: make sure that each row has N elements, so the matrix
+% in total has N columns. Do this recursively, make sure the head row
+% has N elements, and check if the remaining tail matrix has N columns.
 len_col([], _).
 len_col([HD | TL], N) :-
     length(HD, N),
     len_col(TL, N).
 
+% Make sure the elements in this array are within the domain (1 ~ N).
+% Base case: empty array is within any domain.
+% Recursive step: make sure the head element is within the domain (1 ~ N);
+% then check if the elements of the remaining array are within the domain.
 within_domain([], _).
 within_domain([HD | TL], N) :-
     fd_domain(HD, 1, N),
     within_domain(TL, N).
 
-% https://stackoverflow.com/questions/4280986/how-to-transpose-a-matrix-in-prolog
+% Check if the first matrix is the tranpose of the second one.
+% Base case: empty matrix is the transpose of itself
+% Recursive step: check the two matrices are tranposes of each other
+% using the transpose predicate with three parameters.
 transpose([], []).
 transpose([F|Fs], Ts) :-
     transpose(F, [F|Fs], Ts).
 
+
+% Parameters in order: matrix T (matched to head and tail), matrix T, T tranpose 
+% Base case: empty matrix transpose
+% Recursive step:
+% Check that the first row of T_transpose is the first column of T.
+% Check that the remaining rows of T_tranpose are the remaining rows of T.
+% Separation of the first and the remaing cols are checked by lists_first_rests
 transpose([], _, []).
 transpose([_|Rs], Ms, [Ts|Tss]) :-
         lists_firsts_rests(Ms, Ts, Ms1),
         transpose(Rs, Ms1, Tss).
 
+% Separate the matrix into two matrices vertically: first column and remaining
+% Parameters in order: A = B | C, B, C (B is the first col)
+% Base case: empty matrix separation.
+% Recursive step: 
+% A is parsed row by row each time
+% B is composed of the first element in the first row of A and
+% the first cols of the remaining rows
+% C is composed of the remaining elements in the first row of A and
+% the tail cols of the remaining rows
 lists_firsts_rests([], [], []).
 lists_firsts_rests([[F|Os]|Rest], [F|Fs], [Os|Oss]) :-
         lists_firsts_rests(Rest, Fs, Oss).
 
+% get the element E in matrix M at position Coord
 get_element(Coord, E, M) :-
     [R|C] = Coord, nth(R, M, Row), nth(C, Row, E).
 
-
+% check constraints in the cage
+% first two are the helper functions for sum and mult
 check_sum_helper(0, [], _).
 check_sum_helper(Sum, [Hd|Tl], M) :-
     get_element(Hd, E, M),
@@ -41,6 +78,8 @@ check_mult_helper(Product, [Hd|Tl], M) :-
     Rem #= Product / E,
     check_mult_helper(Rem, Tl, M).
 
+% check the constraints in order: sum, mult, diff, quot
+% the second parameter is the pattern of constraints
 check_constrain(M, +(S, L)) :-
     check_sum_helper(S, L, M).
 
@@ -55,8 +94,16 @@ check_constrain(M, /(Q, J, K)) :-
     get_element(J, E1, M), get_element(K, E2, M),
     ((Q #= E1 / E2); (Q #= E2 / E1)).
 
+% first check that X is a N x N matrix;
+% then check all the elements in X are within the domain (1 ~ N);
+% then make sure elements within each row are unique;
+% require T to be transpose of X;
+% make sure elements within each row are unique,
+% in this way, we make sure each row, each col has distinct numbers from 1 to N;
+% check the constraints (use the idea of partially applying a predicate);
+% fd_labeling to make prolog to instantiate
 kenken(N, C, T) :-
-    len_row(X, N),
+    length(X, N),
     len_col(X, N),
     within_domain(X, N),
     maplist(fd_all_different, X),
@@ -66,57 +113,48 @@ kenken(N, C, T) :-
     maplist(fd_labeling, X).
 
 
-% plain_all_different(L) :-
-%     length(L, Length),
-%     sort(L, L_ordered),
-%     length(L_ordered, Length_ordered),
-%     Length == Length_ordered.
-
-% plain_all_unique([]).
-% plain_all_unique([Hd|Tl]) :-
-%     member(Hd, Tl), !, fail.
-% plain_all_unique([_|Tl]) :-
-%     plain_all_unique(Tl).
-
-% plain_within_domain(_, []).
-% plain_within_domain(N, [Hd|Tl]) :-
-%     length(Hd, N),
-%     maplist(between(1, N), Hd),
-%     plain_within_domain(N, Tl).
-
-plain_get_element([C|R], E, M) :-
-    nth(R, M, Row), nth(C, Row, E).
-
-plain_range(N, L) :-
-    findall(X, between(1, N, X), L).
-
-plain_within_domain(N, E) :-
-    plain_range(N, L),
-    member(E, L).
-
+%% plain version
+% change the order to check the length of an array to allow for partially application
 plain_len_row(N, M) :-
     length(M, N).
 
-plain_all_unique(L) :-
-    length(L, L1),
-    sort(L, L_sorted),
-    length(L_sorted, L2),
-    (L1 == L2).
+% check that each row has N elements to check the matrix has N columns
+plain_len_col(N, M) :-
+    maplist(plain_len_row(N), M).
 
-plain_all_different(N, M) :-
-    maplist(plain_within_domain(N), M),
-    plain_all_unique(M).
+% check whether an element E is within the domain 1 ~ N
+% first construct a list of integers from 1 to N
+% then check whether E is a member of this list L
+plain_within_domain(N, E) :-
+    findall(X, between(1, N, X), L),
+    member(E, L).
 
+% check whether elements of a list are unique.
+% Base case: empty list contains unique elements;
+% Recursive step: check that head is not in the tail;
+% then ensure the tail list contains unqiue elements
+plain_all_unique([]).
+plain_all_unique([Hd|Tl]) :-
+    member(Hd, Tl), !, fail.
+plain_all_unique([_|Tl]) :-
+    plain_all_unique(Tl).
 
+% make sure the elements of a list are within the domain
+% and are all unique
+plain_all_different(N, L) :-
+    maplist(plain_within_domain(N), L),
+    plain_all_unique(L).
+
+% check constraints, similar as above, but use is/1 instead of '#='
 plain_check_sum_helper(0, [], _).
 plain_check_sum_helper(Sum, [Hd|Tl], M) :-
-    plain_get_element(Hd, E, M),
+    get_element(Hd, E, M),
     Rem is (Sum - E),
     plain_check_sum_helper(Rem, Tl, M).
 
 plain_check_mult_helper(1.0, [], _).
 plain_check_mult_helper(Product, [Hd|Tl], M) :-
-    plain_get_element(Hd, E, M),
+    get_element(Hd, E, M),
     Rem is (Product / E),
     plain_check_mult_helper(Rem, Tl, M).
 
@@ -127,63 +165,30 @@ plain_check_constrain(M, *(P, L)) :-
     plain_check_mult_helper(P, L, M).
 
 plain_check_constrain(M, -(D, J, K)) :-
-    plain_get_element(J, E1, M), plain_get_element(K, E2, M),
+    get_element(J, E1, M), get_element(K, E2, M),
     ((D is (E1 - E2)); (D is (E2 - E1))).
 
 plain_check_constrain(M, /(Q, J, K)) :-
-    plain_get_element(J, E1, M), plain_get_element(K, E2, M),
+    get_element(J, E1, M), get_element(K, E2, M),
     ((E1 is (Q * E2)); (E2 is (Q * E1))).
 
+% first make sure X is N x N;
+% make sure T is the transpose of X
+% note the order is changed, because we need cheap checks at first
+% instead of instantiations (without finite domain solver, all the
+% range would be instantiated)
+% check T has 1 ~ N in each col and row as before
+% check T satisfies the constraints
 plain_kenken(N, C, T) :-
-    plain_len_row(N, T),
-    maplist(plain_len_row(N), T),
-    transpose(T, X),
-    maplist(plain_all_different(N), T),
+    plain_len_row(N, X),
+    plain_len_col(N, X),
+    transpose(X, T),
     maplist(plain_all_different(N), X),
-    maplist(plain_check_constrain(X), C).
+    maplist(plain_all_different(N), T),
+    maplist(plain_check_constrain(T), C).
 
 
-within_domain_2(N, Domain) :- 
-    findall(X, between(1, N, X), Domain).
-
-fill_2d([], _).
-fill_2d([Head | Tail], N) :-
-    within_domain_2(N, Domain),
-    permutation(Domain, Head),
-    fill_2d(Tail, N).
-
-create_grid(Grid, N) :-
-    length(Grid, N),
-    transpose(Grid, T),
-    maplist(unique_list2(N), T),
-    fill_2d(Grid, N).
-
-
-unique_list2(N, L) :-
-    unique_list1(L, N).
-
-unique_list1(List, N) :-
-	length(List, N),
-	elements_between(List, 1, N),
-	all_unique(List).
-
-elements_between(List, Min, Max) :-
-	maplist(between(Min,Max), List).
-
-within_domain_3(Min, Max, L) :-
-    maplist(between(Min, Max), L).
-
-all_unique([]).
-all_unique([H|T]) :- exists(H, T), !, fail.
-all_unique([H|T]) :- all_unique(T).
-
-exists(X, [X|_]).
-exists(X, [_|T]) :-
-	exists(X, T).
-
-
-
-kenken_testcase(
+kenken_testcase1(
   6,
   [
    +(11, [[1|1], [2|1]]),
@@ -204,31 +209,41 @@ kenken_testcase(
   ]
 ).
 
-ken_answer([[5,6,3,4,1,2],
+kenken_answer1([[5,6,3,4,1,2],
      [6,1,4,5,2,3],
      [4,5,2,3,6,1],
      [3,4,1,2,5,6],
      [2,3,6,1,4,5],
      [1,2,5,6,3,4]]).
 
+kenken_testcase2(
+    4,
+    [
+    +(6, [[1|1], [1|2], [2|1]]),
+    *(96, [[1|3], [1|4], [2|2], [2|3], [2|4]]),
+    -(1, [3|1], [3|2]),
+    -(1, [4|1], [4|2]),
+    +(8, [[3|3], [4|3], [4|4]]),
+    *(2, [[3|4]])
+    ]
+).
+
 
     /* use statistics/0 to measure performance
+
     Kenken:
 
-    Memory               limit         in use            free
-
-        trail  stack      16383 Kb           11 Kb        16372 Kb
-        cstr   stack      16383 Kb           33 Kb        16350 Kb
-        global stack      32767 Kb            9 Kb        32758 Kb
-        local  stack      16383 Kb            6 Kb        16377 Kb
-        atom   table      32768 atoms      1799 atoms     30969 atoms
-
-    Times              since start      since last
-
-        user   time       0.005 sec       0.005 sec
-        system time       0.003 sec       0.003 sec
-        cpu    time       0.008 sec       0.008 sec
-        real   time      11.880 sec      11.880 sec
-
+    plain_kenken(
+    4,
+    [
+    +(6, [[1|1], [1|2], [2|1]]),
+    *(96, [[1|3], [1|4], [2|2], [2|3], [2|4]]),
+    -(1, [3|1], [3|2]),
+    -(1, [4|1], [4|2]),
+    +(8, [[3|3], [4|3], [4|4]]),
+    *(2, [[3|4]])
+    ],
+    T
+    ), write(T), nl, fail.
 
     */
