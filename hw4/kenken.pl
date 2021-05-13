@@ -6,6 +6,8 @@
 % Thanks the TAs team so much for help
 % I write some comments for these methods to make sure I understand them myself
 
+% Performance comparison and noop_kenken design is in README.txt
+
 
 % Make sure the matrix X has N columns.
 % Base case: If the matrix is empty, then any numbers filled in the second
