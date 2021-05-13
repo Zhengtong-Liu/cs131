@@ -66,8 +66,8 @@ Problem of the no-op kenken:
     from the numeric constraint should be stored at position p
     of the NxN grid O.
 
-    For instance:
-    noop_kenken_testcase(
+    Example 1:
+    noop_kenken_testcase_1(
         4,
         [
         (6, [[1|1], [1|2], [2|1]]),
@@ -77,14 +77,34 @@ Problem of the no-op kenken:
         (8, [[3|3], [4|3], [4|4]]),
         (2, [[3|4]])
         ]
-    )
+    ).
 
-    Then the query:
-       | ?- noop_kenken_testcase(N, C), noop_kenken(N, C, T, O).
-    has one possible solution:
+   Then the query:
+       | ?- noop_kenken_testcase_1(N, C), noop_kenken(N, C, T, O).
+   has one possible solution:
     
     O = [[+,+,*,*],[+,*,*,*],[-,-,*,+],[-,-,+,+]]
-    T = [[1,2,3,4],[3,4,2,1],[4,3,1,2],2,1,4,3]]
+    T = [[1,2,3,4],[3,4,2,1],[4,3,1,2],[2,1,4,3]]
+
+   Example 2:
+   noop_kenken_testcase_2(
+      4, 
+      [
+         -(1, [1|1], [1|2]),
+         *(36, [[1|3], [1|4], [2|4]]),
+         -(1, [2|1], [3|1]),
+         *(4, [[2|2], [2|3], [3|3]]),
+         +(11, [[3|2], [4|1], [4|2]]),
+         +(5, [[3|4], [4|3], [4|4]])
+      ]
+   ).
+
+   Then the query:
+      | ?- noop_kenken_testcase_2(N, C), noop_kenken(N, C, T, O).
+   should output:
+
+   O = [[-,-,*,*],[-,*,*,*],[-,+,*,+],[+,+,+,+]]
+   T = [[1,2,3,4],[2,1,4,3],[3,4,1,2],[4,3,2,1]]
 
 Remark to the noop_kenken:
     Aside from figuring out the soduku cell problem and 
