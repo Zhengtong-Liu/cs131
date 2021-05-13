@@ -9,7 +9,7 @@
 
 % Make sure the matrix X has N columns.
 % Base case: If the matrix is empty, then any numbers filled in the second
-% parameter is valid;
+% term is valid;
 % Recursive step: make sure that each row has N elements, so the matrix
 % in total has N columns. Do this recursively, make sure the head row
 % has N elements, and check if the remaining tail matrix has N columns.
@@ -30,13 +30,13 @@ within_domain([HD | TL], N) :-
 % Check if the first matrix is the tranpose of the second one.
 % Base case: empty matrix is the transpose of itself
 % Recursive step: check the two matrices are tranposes of each other
-% using the transpose predicate with three parameters.
+% using the transpose predicate with three terms.
 transpose([], []).
 transpose([F|Fs], Ts) :-
     transpose(F, [F|Fs], Ts).
 
 
-% Parameters in order: matrix T (matched to head and tail), matrix T, T tranpose 
+% terms in order: matrix T (matched to head and tail), matrix T, T tranpose 
 % Base case: empty matrix transpose
 % Recursive step:
 % Check that the first row of T_transpose is the first column of T.
@@ -48,7 +48,7 @@ transpose([_|Rs], Ms, [Ts|Tss]) :-
         transpose(Rs, Ms1, Tss).
 
 % Separate the matrix into two matrices vertically: first column and remaining
-% Parameters in order: A = B | C, B, C (B is the first col)
+% terms in order: A = B | C, B, C (B is the first col)
 % Base case: empty matrix separation.
 % Recursive step: 
 % A is parsed row by row each time
@@ -79,7 +79,7 @@ check_mult_helper(Product, [Hd|Tl], M) :-
     check_mult_helper(Rem, Tl, M).
 
 % check the constraints in order: sum, mult, diff, quot
-% the second parameter is the pattern of constraints
+% the second term is the pattern of constraints
 check_constrain(M, +(S, L)) :-
     check_sum_helper(S, L, M).
 
@@ -209,12 +209,6 @@ kenken_testcase1(
   ]
 ).
 
-kenken_answer1([[5,6,3,4,1,2],
-     [6,1,4,5,2,3],
-     [4,5,2,3,6,1],
-     [3,4,1,2,5,6],
-     [2,3,6,1,4,5],
-     [1,2,5,6,3,4]]).
 
 kenken_testcase2(
     4,
@@ -228,22 +222,36 @@ kenken_testcase2(
     ]
 ).
 
+kenken_testcase3(
+    2,
+    []
+).
 
-    /* use statistics/0 to measure performance
+/*
+output of 
+    | ?- kenken_testcase1(N, C), kenken(N, C, T).
 
-    Kenken:
+    T = [[5,6,3,4,1,2],[6,1,4,5,2,3],[4,5,2,3,6,1],[3,4,1,2,5,6],[2,3,6,1,4,5],[1,2,5,6,3,4]]
 
-    plain_kenken(
-    4,
-    [
-    +(6, [[1|1], [1|2], [2|1]]),
-    *(96, [[1|3], [1|4], [2|2], [2|3], [2|4]]),
-    -(1, [3|1], [3|2]),
-    -(1, [4|1], [4|2]),
-    +(8, [[3|3], [4|3], [4|4]]),
-    *(2, [[3|4]])
-    ],
-    T
-    ), write(T), nl, fail.
+output of 
+    | ?- kenken_testcase2(N, C), kenken(N, C, T).
 
-    */
+    (also
+    | ?- kenken_testcase2(N, C), plain_kenken(N, C, T).)
+
+    T = [[1,2,3,4],[3,4,2,1],[4,3,1,2],[2,1,4,3]]
+        [[1,2,4,3],[3,4,2,1],[4,3,1,2],[2,1,3,4]]
+        [[2,1,3,4],[3,4,2,1],[4,3,1,2],[1,2,4,3]]
+        [[2,1,4,3],[3,4,2,1],[4,3,1,2],[1,2,3,4]]
+        [[3,1,2,4],[2,4,3,1],[4,3,1,2],[1,2,4,3]]
+        [[3,2,4,1],[1,4,2,3],[4,3,1,2],[2,1,3,4]]
+
+output of
+    | ?- kenken_testcase3(N, C), kenken(N, C, T).
+
+    (also
+    | ?- kenken_testcase3(N, C), plain_kenken(N, C, T).)
+
+    T = [[1,2],[2,1]] 
+        [[2,1],[1,2]]
+*/
