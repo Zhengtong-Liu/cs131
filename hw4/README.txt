@@ -57,7 +57,7 @@ In constrast, plain_kenken uses about 0.048 seconds user
 CPU time, very little system CPU time, and 0.048 seconds 
 in terms of the CPU time and 0.084 seconds in terms of the real time 
 to run this 4 x 4 test case. This data shows that 
-kenken runs much faster than plain_kenken. In fact, when testing on 5 x 5
+kenken runs much faster than plain_kenken. In fact, when testing on 6 x 6
 matrices, kenken took little time to solve it and plain_kenken seemed to
 be stuck. This constrast also confirmed that kenken performed much better
 than plain_kenken, especially as the size of the matrix to solve is getting
