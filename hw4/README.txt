@@ -1,37 +1,43 @@
 Test the performance of kenken and plain_kenken:
 
-| ?- kenken_testcase2(N, C), kenken(N, C, T), statistics.
+| ?- statistics, fd_set_vector_max(255), xkenken_testcase4(N, C), 
+   kenken(N, C, T), statistics.
+
+Useful output:
+
 Memory               limit         in use            free
 
-   trail  stack      16383 Kb            6 Kb        16377 Kb
+   trail  stack      16383 Kb            5 Kb        16378 Kb
    cstr   stack      16383 Kb           11 Kb        16372 Kb
    global stack      32767 Kb            4 Kb        32763 Kb
    local  stack      16383 Kb            3 Kb        16380 Kb
-   atom   table      32768 atoms      1799 atoms     30969 atoms
+   atom   table      32768 atoms      1800 atoms     30968 atoms
 
 Times              since start      since last
 
-   user   time       1.117 sec       0.000 sec
-   system time       0.005 sec       0.001 sec
-   cpu    time       1.122 sec       0.001 sec
-   real   time     194.676 sec       2.513 sec
+   user   time       0.024 sec       0.000 sec
+   system time       0.000 sec       0.000 sec
+   cpu    time       0.024 sec       0.000 sec
+   real   time      67.180 sec       0.000 sec
 
-| ?- kenken_testcase2(N, C), plain_kenken(N, C, T), statistics.
+| ?- statistics, kenken_testcase4(N, C), plain_kenken(N, C, T), statistics.
+
+Useful output:
+
 Memory               limit         in use            free
 
    trail  stack      16383 Kb            0 Kb        16383 Kb
    cstr   stack      16384 Kb            0 Kb        16384 Kb
    global stack      32767 Kb            8 Kb        32759 Kb
    local  stack      16383 Kb            6 Kb        16377 Kb
-   atom   table      32768 atoms      1799 atoms     30969 atoms
+   atom   table      32768 atoms      1800 atoms     30968 atoms
 
 Times              since start      since last
 
-   user   time       2.200 sec       0.549 sec
-   system time       0.005 sec       0.000 sec
-   cpu    time       2.205 sec       0.549 sec
-   real   time     206.865 sec       4.637 sec
-
+   user   time       0.072 sec       0.048 sec
+   system time       0.000 sec       0.000 sec
+   cpu    time       0.072 sec       0.048 sec
+   real   time     215.003 sec       0.084 sec
 
 Discussion on the memory (in use):
 From the statistics collected, we see that kenken uses 4 Kb in terms of
@@ -45,15 +51,20 @@ information is consistent with the requirements that kenken can use the FD
 solver while plain_kenken cannot. 
 
 Discussion about the speed (since last):
-Note that kenken uses very little user CPU time and about 0.001 seconds 
-system CPU time, so in total 0.001 seconds in terms of the CPU time to run
-the test case. In constrast, plain_kenken uses about 0.549 seconds user
-CPU time, very little system CPU time, and 0.549 seconds in total 0.549
-seconds in terms of the CPU time to run the test case. This data shows that 
-kenken runs much faster (about 500x) than plain_kenken in terms of the CPU time. 
+Note that kenken uses very little user CPU time, system CPU time, total
+CPU time and real time, meaning kenken solved the problem really fast.
+In constrast, plain_kenken uses about 0.048 seconds user
+CPU time, very little system CPU time, and 0.048 seconds 
+in terms of the CPU time and 0.084 seconds in terms of the real time 
+to run this 4 x 4 test case. This data shows that 
+kenken runs much faster than plain_kenken. In fact, when testing on 5 x 5
+matrices, kenken took little time to solve it and plain_kenken seemed to
+be stuck. This constrast also confirmed that kenken performed much better
+than plain_kenken, especially as the size of the matrix to solve is getting
+larger. 
 
 
-Problem of the no-op kenken:
+Design of the no-op kenken:
     interface: noop_kenken(N, C, T, O)
     N -- a nonnegative integer specifying the number of cells 
         on each side of the KenKen square.

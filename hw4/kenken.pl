@@ -243,14 +243,14 @@ kenken_testcase4(
 
 /*
 output of 
-    | ?- kenken_testcase1(N, C), kenken(N, C, T).
+    | ?- fd_set_vector_max(255), kenken_testcase1(N, C), kenken(N, C, T).
 
     T = [[5,6,3,4,1,2],[6,1,4,5,2,3],[4,5,2,3,6,1],[3,4,1,2,5,6],[2,3,6,1,4,5],[1,2,5,6,3,4]]
     (same as the answer in the spec)
 
 
 output of 
-    | ?- kenken_testcase2(N, C), kenken(N, C, T).
+    | ?- fd_set_vector_max(255), kenken_testcase2(N, C), kenken(N, C, T).
 
     T = [[1,2,3,4],[3,4,2,1],[4,3,1,2],[2,1,4,3]]
         [[1,2,4,3],[3,4,2,1],[4,3,1,2],[2,1,3,4]]
@@ -271,7 +271,7 @@ output of
         [[3,1,2,4],[2,4,3,1],[4,3,1,2],[1,2,4,3]]
 
 output of
-    | ?- kenken_testcase3(N, C), kenken(N, C, T).
+    | ?- fd_set_vector_max(255), kenken_testcase3(N, C), kenken(N, C, T).
 
     (also
     | ?- kenken_testcase3(N, C), plain_kenken(N, C, T).)
@@ -280,7 +280,7 @@ output of
         [[2,1],[1,2]]
 
 output of
-    | ?- kenken_testcase4(N, C), kenken(N, C, T).
+    | ?- fd_set_vector_max(255), kenken_testcase4(N, C), kenken(N, C, T).
 
     (aslo 
     | ?- kenken_testcase4(N, C), plain_kenken(N, C, T).)
