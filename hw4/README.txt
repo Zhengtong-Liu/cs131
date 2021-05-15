@@ -1,6 +1,6 @@
 Test the performance of kenken and plain_kenken:
 
-| ?- statistics, fd_set_vector_max(255), xkenken_testcase4(N, C), 
+| ?- statistics, fd_set_vector_max(255), kenken_testcase4(N, C), 
    kenken(N, C, T), statistics.
 
 Useful output:
