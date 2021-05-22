@@ -2,9 +2,11 @@
 (provide expr-compare)
 (provide (all-defined-out))
 
+; helper procedure: check whether x is a valid lambda symbol
 (define (lambda? x)
   (if (member x '(lambda λ)) #t #f))
 
+; first assigment: expr-compare
 (define (expr-compare x y)
     (cond
         [(equal? x y) x]
@@ -15,7 +17,9 @@
         [(and (list? x) (list? y))
             (expr-compare-list x y)]))
 
+; compare two list expressions (only compare the start)
 (define (expr-compare-list x y)
+    ; helper procedure: compare two lambda list expressions 
     (define (expr-compare-lambda x y)
         (define (compare-lambda-helper lmbda)
             (if
@@ -43,6 +47,7 @@
                     (list 'if '% x y)]
                 [#t (expr-compare-list-body x y)])]))
 
+; compare two list expressions, compare the remaining contents
 (define (expr-compare-list-body x y)
     (if
         (and (empty? x) (empty? y)) empty
@@ -58,9 +63,13 @@
                 [#t
                     (cons (list 'if '% (car x) (car y)) remaining_res)]))))
 
+; combine two syms (e.g. (concat-syms 'a 'b) => 'a!b)
 (define (concat-syms sym1 sym2)
     (string->symbol (string-append (symbol->string sym1) "!" (symbol->string sym2))))
 
+; build a hash map using lists x and y, rev-flag is set
+; if the combined symbols should be 'b!a' instead of 'a!b'
+; (where a comes from x, b comes from y)
 (define (my-map x y rev-flag)
     (if (and (empty? x) (empty? y)) (hash)
         (let ([cur-map (my-map (cdr x) (cdr y) rev-flag)]
@@ -69,7 +78,9 @@
         (if (equal? hd-x hd-y) (hash-set cur-map hd-x hd-y)
             (hash-set cur-map hd-x (if rev-flag (concat-syms hd-y hd-x) (concat-syms hd-x hd-y)))))))
 
+; construct the result list of two lambda expressions
 (define (expr-parse-lambda x y lmda x-list y-list)
+    ; combine the arguments of the two lambda expressions
     (define (combine-lambda-args x y)
     (cond
         [(and (empty? x) (empty? y)) empty]
@@ -84,12 +95,17 @@
             (cons (my-map args-x args-y #f) x-list)
             (cons (my-map args-y args-x #t) y-list)))))
 
+; get the value (latest, or the first encountered value) 
+; from the dictionary lists x-list given a value x
 (define (get-symbol x x-list)
         (if (empty? x-list) "Not Found"
             (let ([find-res (hash-ref (car x-list) x "Not Found")])
                 (if (equal? find-res "Not Found") 
                     (get-symbol x (cdr x-list)) find-res))))
 
+; process the third argument of the lambda expression
+; note that we need to replace the symbols 
+; with the combined symbols storing in the dictionaries
 (define (parse-lambda x y x-list y-list)
         (let ([find-res-x (get-symbol x x-list)]
             [find-res-y (get-symbol y y-list)])
@@ -105,6 +121,8 @@
                             (if (list? x) (replace-expr-head x x-list) res-x) 
                             (if (list? y) (replace-expr-head y y-list) res-y))]))))
 
+; process the third argument of the lambda expression if it is a list
+; (compare the remaining part)
 (define (parse-lambda-list-body x y x-list y-list) 
     (if (and (empty? x) (empty? y)) empty
         (let ([find-res-x (get-symbol (car x) x-list)]
@@ -127,7 +145,8 @@
                                 (cons (list 'if '% (replace-expr-head (car x) x-list) (replace-expr-head (car y) y-list)) parse-remaining)]
                             [#t (cons (list 'if '% res-x res-y) parse-remaining)])))))))
 
-
+; process the third argument of the lambda expression if it is a list
+; (compare the start)
 (define (parse-lambda-list x y x-list y-list)
     (cond 
         [(and (equal? (car x) 'if) (equal? (car y) 'if)) 
@@ -146,13 +165,20 @@
         [(or (lambda? (car x)) (lambda? (car y))) (list 'if '% (replace-expr-head x x-list) (replace-expr-head y y-list))]
         [#t (parse-lambda-list-body x y x-list y-list)]))
 
-
+; replace the symbols in an expression x if there are corresponding values
+; stored in the hash tables list
+; (replace the start)
 (define (replace-expr-head x x-list)
     (cond
         [(empty? x) empty]
         [(equal? (car x) 'quote) x]
         [(boolean? (car x)) (cons (car x) (replace-expr-body (cdr x) x-list))]
         [(equal? (car x) 'if) (cons (car x) (replace-expr-body (cdr x) x-list))]
+        ; if the expression starts with lambda
+        ; we do not need to modify the second argument (the arguments part)
+        ; as it is already processed before in expr-parse-lambda
+        ; we only need to add the symbols in the second arguement
+        ; to the hash tables list and replace the symbols in the third arguement
         [(lambda? (car x)) (cons (car x) (cons (cadr x) (replace-expr-body (cddr x) 
                 (cons (my-map (cadr x) (cadr x) #f) x-list))))]
         [(list? (car x) (cons (replace-expr-head (car x) x-list) (replace-expr-body (cdr x) x-list)))]
@@ -160,6 +186,9 @@
                 (if (equal? (get-symbol (car x) x-list) "Not Found") (car x) (get-symbol (car x) x-list))
                 (replace-expr-body (cdr x) x-list))]))
 
+; replace the symbols in an expression x if there are corresponding values
+; stored in the hash tables list
+; (replace the remaining)
 (define (replace-expr-body x x-list) 
     (cond 
         [(empty? x) empty]
@@ -170,7 +199,8 @@
                 (if (equal? (get-symbol (car x) x-list) "Not Found") (car x) (get-symbol (car x) x-list))
                 (replace-expr-body (cdr x) x-list))]))
 
-
+; helper function, replace old with new in expr
+; credit to week 8 discussion 1b slides 
 (define (replace-sym old new expr)
     (define (replace e)
         (cond 
@@ -182,6 +212,7 @@
     (replace expr)
 )
 
+; second assignment: test-expr-compare
 (define (test-expr-compare x y)
     (let ([cmp-result (expr-compare x y)])
         (let ([expr-x (replace-sym '% #t cmp-result)]
@@ -192,6 +223,7 @@
                 #t #f
             ))))
 
+; third assignment: test-expr-x and test-expr-y
 (define test-expr-x
     '(if (eq? #t ((lambda (a b flag) (eq? a ((λ (c) (if flag (+ 1 c) (- 1 c))) b))) 2 1 #t)) (quote (a b)) (list 'a 'c))
 )
