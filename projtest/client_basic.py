@@ -10,7 +10,7 @@ import sys
 
 
 '''
-communicate (['Hill', 'Jaquez', 'Smith', 'Campbell', 'Singleton'])
+communicate (['Riley', 'Jaquez', 'Juzang', 'Campbell', 'Bernard'])
 0 1 1 0 0
 1 0 0 0 1
 1 0 0 1 1
@@ -35,11 +35,11 @@ class SuperClient:
     def set_server_info(self, port_dict, server_dir):
         self.port_dict = port_dict
         self.port2server = dict(zip(port_dict.values(), port_dict.keys()))
-        self.Hill = port_dict['Hill']
+        self.Riley = port_dict['Riley']
         self.Jaquez = port_dict['Jaquez']
-        self.Smith = port_dict['Smith']
+        self.Juzang = port_dict['Juzang']
         self.Campbell = port_dict['Campbell']
-        self.Singleton = port_dict['Singleton']
+        self.Bernard = port_dict['Bernard']
         self.server = os.path.join(server_dir, "server.py")
 
     async def start_server(self, server_name):
@@ -168,17 +168,17 @@ class SuperClient:
         # start the servers
         self.start_all_servers()
         # basic test sample
-        data = self.safe_run_iamat(self.Hill, "client", 34.068930, -118.445127)
-        basic_correctness = evaluate_info(data, self.port2server[self.Hill], "client", 34.068930, -118.445127)
+        data = self.safe_run_iamat(self.Riley, "client", 34.068930, -118.445127)
+        basic_correctness = evaluate_info(data, self.port2server[self.Riley], "client", 34.068930, -118.445127)
         report_correctness("basic iamat correctness", basic_correctness)
-        first_line, json_part = self.safe_run_whatsat(self.Hill, "client", 10, 5)
-        first_line_correctness = evaluate_info(first_line, self.port2server[self.Hill], "client", 34.068930, -118.445127)
+        first_line, json_part = self.safe_run_whatsat(self.Riley, "client", 10, 5)
+        first_line_correctness = evaluate_info(first_line, self.port2server[self.Riley], "client", 34.068930, -118.445127)
         json_correctness = evaluate_json(json_part, 5)
         report_correctness("basic whatsat first line correctness", first_line_correctness)
         report_correctness("basic whatsat json part correctness", json_correctness)
         # more advanced example (simpler than the real test case)
         first_line, json_part = self.run_whatsat(self.Jaquez, "client", 10, 5)
-        first_line_correctness = evaluate_info(first_line, self.port2server[self.Hill], "client", 34.068930, -118.445127)
+        first_line_correctness = evaluate_info(first_line, self.port2server[self.Riley], "client", 34.068930, -118.445127)
         json_correctness = evaluate_json(json_part, 5)
         report_correctness("basic flooding first line correctness", first_line_correctness)
         report_correctness("basic flooding json part correctness", json_correctness)
@@ -224,11 +224,11 @@ if __name__ == '__main__':
     TIMEOUT = 20
     # an example of the ports (these port numbers work on your local machine, but not on the server)
     port_dict = {
-        'Hill': 8000,
-        'Jaquez': 8001,
-        'Smith': 8002,
-        'Campbell': 8003,
-        'Singleton': 8004
+        'Riley': 12515,
+        'Jaquez': 12516,
+        'Juzang': 12517,
+        'Campbell': 12518,
+        'Bernard': 12519
     }
     server_dir = "./sample_submission" # the place where we can find server.py
 
