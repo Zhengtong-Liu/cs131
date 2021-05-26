@@ -10,13 +10,13 @@ from collections import defaultdict
 API_KEY = 'AIzaSyAiVWcBlgHPhyV_54ZBoZaijPV0Md7Ii94'
 
 
-server_nodes = {"Riley": 12515, "Jaquez": 12516, "Juzang": 12517, "Campell": 12518, "Bernard": 12519}
+server_nodes = {"Riley": 12515, "Jaquez": 12516, "Juzang": 12517, "Campbell": 12518, "Bernard": 12519}
 server_edges = {
     "Riley": ["Jaquez", "Juzang"],
     "Jaquez": ["Riley", "Bernard"],
-    "Juzang": ["Campell"],
-    "Campell": ["Juzang", "Bernard"],
-    "Bernard": ["Jaquez", "Juzang", "Campell"]
+    "Juzang": ["Campbell"],
+    "Campbell": ["Juzang", "Bernard"],
+    "Bernard": ["Jaquez", "Juzang", "Campbell"]
 }
 
 
@@ -60,23 +60,26 @@ class ServerMessage:
 
     async def handle_whats_at(self, client_id, radius, max_results):
         flag = True
+        coords = ""
+        coordinates = ""
         if client_id not in self.history.keys():
             flag = False
-        message_list = self.history[client_id].strip().split()
-        coords = message_list[4]
-        index_plus = coords.rfind('+')
-        index_minus = coords.rfind('-')
-        if index_plus < index_minus and index_minus:
-            coordinates = f"{coords[:index_minus]}, {coords[index_minus:]}"
-        elif index_minus < index_plus and index_plus:
-            coordinates = f"{coords[:index_plus]}, {coords[index_plus:]}"
         else:
-            sys.stderr.write(f"bad coordinate format: {coords}")
-            sys.exit(1)
-        if (not (valid_float(radius) and valid_float(max_results))) or \
-            (int(radius) < 0 or int(radius) > 50) or \
-            (int(max_results) < 0 or int(max_results) > 20):
-            flag = False
+            message_list = self.history[client_id].strip().split()
+            coords = message_list[4]
+            index_plus = coords.rfind('+')
+            index_minus = coords.rfind('-')
+            if index_plus < index_minus and index_minus:
+                coordinates = f"{coords[:index_minus]}, {coords[index_minus:]}"
+            elif index_minus < index_plus and index_plus:
+                coordinates = f"{coords[:index_plus]}, {coords[index_plus:]}"
+            else:
+                sys.stderr.write(f"bad coordinate format: {coords}")
+                sys.exit(1)
+            if (not (valid_float(radius) and valid_float(max_results))) or \
+                (int(radius) < 0 or int(radius) > 50) or \
+                (int(max_results) < 0 or int(max_results) > 20):
+                flag = False
 
         if flag:
             logging.info(f"start Nearby Search request at location {coords}")
