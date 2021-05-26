@@ -1,5 +1,5 @@
 import asyncio
-import message
+import argparse
 
 
 class Client:
@@ -42,7 +42,9 @@ class Client:
 
 
 if __name__ == '__main__':
-    client = Client()  # using the default settings
-    client_message = message.ClientMessage()
-    client.tcp_echo_client(client_message.text("IAMAT"))
+    parser = argparse.ArgumentParser('Client Argument Parser')
+    parser.add_argument('client_name', type=str, help='required client name input')
+    args = parser.parse_args()
+    print(f"Hello, this is client {args.client_name}")
+    client = Client(name=args.client_name)  # using the default settings
     client.run_until_quit()
