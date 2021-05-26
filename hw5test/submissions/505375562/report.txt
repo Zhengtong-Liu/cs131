@@ -1,0 +1,45 @@
+# 1: ac
+# 2: ac
+# 3: ac
+# 4: ac
+# 5: ac
+# 6: ac
+# 7: ac
+# 8: ac
+# 9: ac
+#10: ac
+#11: ac
+#12: ac
+#13: ac
+#14: ac
+#15: ac
+#16: ac
+#17: ac
+#18: ac
+#19: ac
+#20: ac
+#21: ac
+#22: ac
+#23: ac
+#24: ac
+#25: ac
+#26: ac
+#27: ac
+#28: ac
+#29: ac
+#30: ac
+#31: ac
+#32: ac
+#33: ac
+#34: ac
+#35: ac
+#36: ac
+
+ ac: 36 wa: 0 re: 0 tle: 0
+SCORE: 72 / 72
+
+ ===EXTRA=== 
+# 1: ac
+
+ ac: 1 wa: 0 re: 0 tle: 0
+SCORE: 2 / 2
