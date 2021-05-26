@@ -2,9 +2,6 @@ import tarfile
 from zipfile import ZipFile
 import shutil
 import os
-import sys
-import pandas as pd
-import re
 
 submissions_dir = "./sample_submission/"
 project_code_fname = ["project.tgz", "project.tar.gz", "report.tgz", "server.tgz", "project.zip"]

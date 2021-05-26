@@ -1,10 +1,8 @@
 import asyncio
-import argparse
 import time
 import json
 from messages import IAMAT, WHATSAT
 from evaluate import evaluate_json, evaluate_info, evaluate_flooding, compare_lists, report_correctness
-import pandas as pd
 import os
 import sys
 
@@ -19,7 +17,7 @@ communicate (['Riley', 'Jaquez', 'Juzang', 'Campbell', 'Bernard'])
 '''
 
 TIMEOUT_MSG = "TIMEOUT"
-PYTHON_VER = "3.8" # "3.7"
+PYTHON_VER = "3" # "3.7"
 
 class SuperClient:
     def __init__(self, host='127.0.0.1', message_max_length=1e6, timeout=None):
