@@ -146,7 +146,9 @@ class Server:
             else:
                 logging.info(f"no need to update message from client {message_list[3]}")
         else:
-            logging.info(f"? {message}")
+            sendback_message = f"? {message}"
+            logging.info(f"Invalid message: {sendback_message}")
+            writer.write(sendback_message.encode())
 
     async def run_forever(self):
         server = await asyncio.start_server(self.handle_echo, self.ip, self.port)
