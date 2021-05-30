@@ -9,7 +9,7 @@ from collections import defaultdict
 
 API_KEY = 'AIzaSyAiVWcBlgHPhyV_54ZBoZaijPV0Md7Ii94'
 
-
+#12515 ~ 12519
 server_nodes = {"Riley": 12515, "Jaquez": 12516, "Juzang": 12517, "Campbell": 12518, "Bernard": 12519}
 server_edges = {
     "Riley": ["Jaquez", "Juzang"],
