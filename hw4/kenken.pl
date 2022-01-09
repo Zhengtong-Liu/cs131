@@ -287,3 +287,32 @@ output of
 
     T = [[1,2,3,4],[2,1,4,3],[3,4,1,2],[4,3,2,1]]
 */
+
+
+adjdups([], []).
+adjdups([M], [M]).
+adjdups([Hd | [Hd | Tl]], R) :-
+    adjdups([Hd | Tl], R).
+adjdups([Hd | [Hd2 | _]], [Hd | _]) :-
+    Hd = Hd2, !, fail.
+adjdups([Hd | [Hd2 | Tl]], [Hd | Rtl]) :-
+    adjdups([Hd2 | Tl], Rtl).
+
+
+split3_helper([], [], [], [], _) :- 
+    !.
+split3_helper([Hd|Tl], [Hd|Xtl], Y, Z, 0) :-
+    split3_helper(Tl, Xtl, Y, Z, 1).
+split3_helper([Hd|Tl], X, [Hd|Ytl], Z, 1) :-
+    split3_helper(Tl, X, Ytl, Z, 2).
+split3_helper([Hd|Tl], X, Y, [Hd|Ztl], 2) :-
+    split3_helper(Tl, X, Y, Ztl, 0).
+
+split3(H, X, Y, Z) :-
+    split3_helper(H, X, Y, Z, 0).
+
+/* if the first argument is not given, two cases:
+    others not given -> prolog tries to enumerate all
+    possible cases -> stack overflow;
+    at least one are given in ground term -> finite answer
+    -> ok */

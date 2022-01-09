@@ -1,0 +1,8 @@
+                [(and (list? (car x)) (list? (car y)) (equal? (length (car x)) (length (car y))))
+        (cond
+#lang racket
+(define (expr-compare x y)
+(define (test-expr-compare x y)
+(define test-expr-x
+(define test-expr-y
+(provide (all-defined-out))

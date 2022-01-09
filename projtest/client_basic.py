@@ -222,11 +222,11 @@ if __name__ == '__main__':
     TIMEOUT = 20
     # an example of the ports (these port numbers work on your local machine, but not on the server)
     port_dict = {
-        'Riley': 12515,
-        'Jaquez': 12516,
-        'Juzang': 12517,
-        'Campbell': 12518,
-        'Bernard': 12519
+        'Riley': 8000,
+        'Jaquez': 8001,
+        'Juzang': 8002,
+        'Campbell': 8003,
+        'Bernard': 8004
     }
     server_dir = "./sample_submission" # the place where we can find server.py
 

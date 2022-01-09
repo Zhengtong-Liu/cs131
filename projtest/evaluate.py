@@ -41,7 +41,7 @@ def compare_info(string1, string2):
     same_length = len(elem_lst1) == len(elem_lst2)
     same_content = True
     for i in range(min(len(elem_lst1), len(elem_lst2))):
-        if string1[i] != string2[i]:
+        if elem_lst1[i] != elem_lst2[i]:
             same_content = False
             break
     return same_length, same_content
